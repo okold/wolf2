@@ -1,32 +1,50 @@
-from agent import Agent
+from actor import Actor
 from multiprocessing import Pipe
 
-class Player(Agent):
+class Player(Actor):
     def __init__(self, name, pipe):
-        super().__init__(name)
+        super().__init__(name, personality="player", goal="player")
         self.pipe = pipe
 
     def run(self):
         self.connect()
 
-        while True:
-            if self.pipe.poll():
-                msg = self.pipe.recv()
-                self.conn.send(msg)
+        try:
+            while True:
+                if self.pipe.poll():
+                    msg = self.pipe.recv()
 
-            if self.conn.poll():
-                msg = self.conn.recv()
-                print(msg)
+                    if msg == "quit" or msg == "leave" or msg == "exit":
+                        dict = {"action": "leave"}
+                    elif msg.startswith("shoot"):
+                        split = msg.split(" ")
+                        dict = {"action": "shoot", "target": split[1]}
+                    else:
+                        dict = {"action": "speak", "content": msg}
+                    self.conn.send(dict)
+
+                if self.conn.poll():
+                    msg = self.conn.recv()
+                    # print(msg)
+        except EOFError:
+            self.conn.close()
+            self.pipe.close()
+            pass
 
 if __name__ == "__main__":
 
-    print("Choose a name:")
-    name = input()
+    name = input("Choose a name: ")
     parent_conn, child_conn = Pipe()
     player = Player(name, child_conn)
     player.start()
 
     while True:
-        print("Send a message to the server:")
-        msg = input()
+        msg = input(">> ")
         parent_conn.send(msg)
+
+        if msg == "quit" or msg == "leave" or msg == "exit":
+            break
+
+    player.join()
+    parent_conn.close()
+    child_conn.close()

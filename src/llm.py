@@ -1,6 +1,11 @@
 import json
 from openai import OpenAI
+from pydantic import BaseModel
 import logging
+
+class JSONMessage(BaseModel):
+    action: str
+
 
 ### LLM
 class LLM:
@@ -15,12 +20,19 @@ class LLM:
         )
         self.model = api["model"]
 
-    def prompt(self, message):
+    def prompt(self, message, json=False):
 
-        response = self.client.responses.create(
-            model = self.model,
-            input=message
-        )
+        if json:
+            response = self.client.responses.create(
+                model = self.model,
+                input=message,
+                text = {"format": {"type": "json_object"}}
+            )
+        else:
+            response = self.client.responses.create(
+                model = self.model,
+                input=message
+            )
 
         return response
 
