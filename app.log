@@ -1,0 +1,45 @@
+2025-07-15 20:38:32,884 - INFO - Current Room: Mick's
+2025-07-15 20:38:32,885 - INFO - A western-style saloon.
+2025-07-15 20:38:32,888 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6f2fc50>.
+2025-07-15 20:38:34,888 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6f2fc50>.
+2025-07-15 20:38:36,168 - INFO - Mick has entered the room!
+2025-07-15 20:38:36,888 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6f2fc50>.
+2025-07-15 20:38:36,889 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff88d0>.
+2025-07-15 20:38:37,680 - INFO - Frank has entered the room!
+2025-07-15 20:38:38,889 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6f2fc50>.
+2025-07-15 20:38:38,889 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff88d0>.
+2025-07-15 20:38:38,889 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff8910>.
+2025-07-15 20:38:40,889 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6f2fc50>.
+2025-07-15 20:38:40,889 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff88d0>.
+2025-07-15 20:38:40,889 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff8910>.
+2025-07-15 20:38:42,890 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6f2fc50>.
+2025-07-15 20:38:42,890 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff88d0>.
+2025-07-15 20:38:42,890 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff8910>.
+2025-07-15 20:38:44,890 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6f2fc50>.
+2025-07-15 20:38:44,890 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff88d0>.
+2025-07-15 20:38:44,890 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff8910>.
+2025-07-15 20:38:46,890 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6f2fc50>.
+2025-07-15 20:38:46,891 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff88d0>.
+2025-07-15 20:38:46,891 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff8910>.
+2025-07-15 20:38:48,891 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6f2fc50>.
+2025-07-15 20:38:48,891 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff88d0>.
+2025-07-15 20:38:48,891 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff8910>.
+2025-07-15 20:38:50,891 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6f2fc50>.
+2025-07-15 20:38:50,891 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff88d0>.
+2025-07-15 20:38:50,891 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff8910>.
+2025-07-15 20:38:52,892 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6f2fc50>.
+2025-07-15 20:38:52,892 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff88d0>.
+2025-07-15 20:38:52,892 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff8910>.
+2025-07-15 20:38:54,892 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6f2fc50>.
+2025-07-15 20:38:54,892 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff88d0>.
+2025-07-15 20:38:54,892 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff8910>.
+2025-07-15 20:38:55,754 - INFO - Clementine has entered the room!
+2025-07-15 20:38:56,892 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6f2fc50>.
+2025-07-15 20:38:56,893 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff88d0>.
+2025-07-15 20:38:56,893 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff8910>.
+2025-07-15 20:38:56,893 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff8990>.
+2025-07-15 20:38:58,893 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6f2fc50>.
+2025-07-15 20:38:58,893 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff88d0>.
+2025-07-15 20:38:58,893 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff8910>.
+2025-07-15 20:38:58,893 - INFO - Frank: Howdy, Clementine. What brings you to this noisy place today?
+2025-07-15 20:38:58,893 - INFO - Attempting to poll <multiprocessing.connection.Connection object at 0x7f9ee6ff8990>.

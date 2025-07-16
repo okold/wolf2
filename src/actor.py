@@ -5,17 +5,17 @@ import time
 ADDRESS = ("localhost", 6000)
 
 class Actor(Process):
-    def __init__(self, name, personality, goal):
+    def __init__(self, name, personality, goal, str = 10, int = 10, cha = 10, lck = 10):
         super().__init__()
 
         self.name = name
         self.personality = personality
         self.goal = goal
 
-        self.str = 10 # feats of physical prowess
-        self.int = 10 # knowing things
-        self.cha = 10 # trade, convincing others
-        self.lck = 10 # for gambling, etc
+        self.str = str # feats of physical prowess
+        self.int = int # knowing things
+        self.cha = cha # trade, convincing others
+        self.lck = lck # for gambling, etc
 
         self.conn = None
         self.room_info = {}

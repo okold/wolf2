@@ -5,6 +5,8 @@ import time
 import logging
 from actor import Actor
 import random
+from llm import LLM
+from datetime import datetime
 
 ADDRESS = ("localhost", 6000)
 
@@ -12,10 +14,12 @@ ADDRESS = ("localhost", 6000)
 # The main server process for the game. Can receive messages from the 
 class World(Process):
 
-    WAIT_TIME = 2
+    WAIT_TIME = 3
 
     def __init__(self, cli, default_room = None):
         super().__init__()
+
+        self.llm = LLM()
 
         # for cli
         self.cli = cli
@@ -30,21 +34,19 @@ class World(Process):
         else:
             self.default_room = default_room
 
-        print(f"Current Room: {self.default_room.name}")
-        print(self.default_room.description)
+        logging.info(f"Current Room: {self.default_room.name}")
+        logging.info(self.default_room.description)
 
     # safely attempts a recv from the provided connection
     def try_recv(self, conn):
 
         try:
-            logging.info(F"Attempting to poll {conn}.")
             if conn.poll():
                 response = conn.recv()
-                logging.info(response)
                 return response
             return None
         except:
-            #logging.error("Failed to poll connection, returning leave message for actor.")
+            logging.error("Failed to poll connection, returning leave message for actor.")
             return {"action": "leave"}
         
     def run(self):
@@ -68,9 +70,10 @@ class World(Process):
                     actor["conn"] = conn
                     conn.send(self.default_room.dict())
 
+                    logging.info(f"{actor['name']} has entered the room!")
                     for to_msg in self.actors:
                         self.actors[to_msg]["conn"].send({"role": "user", "content": f"{actor['name']} has entered the room!"})
-                    print(f"{actor['name']} has entered the room!")
+
                 
                 self.actors_lock.release()
 
@@ -79,12 +82,15 @@ class World(Process):
 
         # main loop
         while True:
+
+            first_speaker = ""
             # check for cli messages
             msg = self.try_recv(self.cli)
             if msg == "quit" or msg == "exit":
                 break
 
             flagged_actors = [] # flag bad connections for removal
+            allow_speak = True  # interference if two bots speak at once
 
             # check each actor for messages & forward
             self.actors_lock.acquire()
@@ -98,22 +104,71 @@ class World(Process):
                 # { "action": "speak", "content": "I am saying something!"}
                 # Echoes the content to the rest of the room.
                 elif msg["action"] == "speak":
-                    output = f"{actor}: {msg['content']}"
-                    print(output)
+                    if allow_speak:
+                        output = f"{actor} says, \"{msg['content']}\""
+                        allow_speak = False
+                        first_speaker = actor
+                    else:
+                        output = f"{actor} tried to speak, but was interrupted by {first_speaker}!"
+                    logging.info(output)
                     for agent2 in self.actors:
-                        if agent2 != actor:
                             self.actors[agent2]["conn"].send({"role": "user", "content": output})
 
-
+                elif msg["action"] == "yell":
+                    output = f"{actor} yells, \"{msg['content'].upper()}\""
+                    logging.info(output)
+                    for agent2 in self.actors:
+                        self.actors[agent2]["conn"].send({"role": "user", "content": output})
                 ### give
                 # { "action": "give", "content": "whiskey", "target": "Bandit" }
                 # TODO: an ACTUAL inventory system. for now, it's just pretend. for fun.
                 elif msg["action"] == "give":
-                    print(msg)
                     output = f"{actor} gave a(n) {msg['content']} to {msg['target']}"
-                    print(output)
+                    logging.info(output)
                     for agent2 in self.actors:
                             self.actors[agent2]["conn"].send({"role": "user", "content": output})
+
+                ### skill_check
+                # { "action": "skill", "content": "play the piano" }
+                elif msg["action"] == "skill":
+                    system_message = f"""Translate a skill check into a sentence. You may determine success or failure.
+
+                    Example input (success):
+                    "action": "skill", "content": "play the piano" 
+                    actor: "name": "Robin", "str": 7, "int": 11, "cha": "14", "lck": "10"
+
+                    Example output (success):
+                    Robin skillfuly played an upbeat tune on the piano.
+
+                    Example input (failure):
+                    "action": "skill", "content": "arm wrestle"
+                    actor: "name": "Robin", "str": 7, "int": 11, "cha": "14", "lck": "10"
+                    target: "name": "Mick", "str": 14, "int": 10, "cha": "12", "lck": "8"
+
+                    Example output (failure):
+                    Try as she might, Robin couldn't beat Mick at an arm wrestle!
+                    """
+
+                    prompt = [
+                        { "role": "developer", "content": system_message},
+                        { "role": "user", "content": f"{msg}"},
+                        { "role": "user", "content": f"actor: {self.actors[actor]}"}
+                    ]
+
+                    try:
+                        if msg["target"] and msg["target"] != "self":
+                            prompt += [{"role": "user", "content": f"target: {self.actors[msg['target']]}"}]
+                    except KeyError:
+                        pass # usually just means the LLM is trying something like "everyone"
+
+                    response = self.llm.prompt(prompt)
+                    output = response.output_text
+
+                    logging.info(output)
+
+                    for agent2 in self.actors:
+                        self.actors[agent2]["conn"].send({"role": "user", "content": output})
+                            
 
                 ### challenge
                 # { "action": "challenge", "content": "dance", "target": "Bandit"}
@@ -135,21 +190,21 @@ class World(Process):
                     try:
                         roll = random.randint(1,20)
                         if roll >= 10:
-                            output = f"{actor} has shot {msg['target']}, and hit!"
+                            output = f"BANG! {actor} has shot at {msg['target']}, and hit!"
                             flagged_actors.append((msg["target"], "killed"))
                             for agent2 in self.actors:
                                 if agent2 != actor:
                                     self.actors[agent2]["conn"].send({"role": "user", "content": output})
                                 else:
-                                    self.actors[agent2]["conn"].send({"role": "assistant", "content": f"I shot {msg['target']}, and hit!"})
+                                    self.actors[agent2]["conn"].send({"role": "assistant", "content": f"BANG! I shot at {msg['target']}, and hit!"})
                         else:
-                            output = f"{actor} has shot {msg['target']}, and missed!"
+                            output = f"BANG! {actor} has shot at {msg['target']}, and missed!"
                             for agent2 in self.actors:
                                 if agent2 != actor:
                                     self.actors[agent2]["conn"].send({"role": "user", "content": output})
                                 else:
-                                    self.actors[agent2]["conn"].send({"role": "assistant", "content": f"I shot {msg['target']}, and missed!"})
-                        print(output + f"SERVER--Reason: {msg['reason']}")
+                                    self.actors[agent2]["conn"].send({"role": "assistant", "content": f"BANG! I shot at {msg['target']}, and missed!"})
+                        logging.info(output)
                     except:
                         pass
 
@@ -164,7 +219,7 @@ class World(Process):
                     else:
                         msg = f"{actor[0]} has left the room!"
 
-                    print(msg)
+                    logging.info(msg)
 
                     for agent2 in self.actors:
                         self.actors[agent2]["conn"].send({"role": "user", "content": msg})
@@ -174,6 +229,7 @@ class World(Process):
 
             self.actors_lock.release()
             time.sleep(World.WAIT_TIME)
+            allow_speak = True
 
 class Room():
     def __init__(self, name = "Mick's", description = "A western-style saloon."):
@@ -197,6 +253,19 @@ class Room():
     
 
 if __name__ == "__main__":
+
+    timestamp = datetime.now()
+
+    logging.basicConfig(
+        filename=f"logs/{timestamp.strftime('%Y-%m-%d %H-%M-%S')}.log",  # Name of the log file
+        level=logging.INFO,  # Minimum logging level to capture (e.g., INFO, DEBUG, WARNING, ERROR, CRITICAL)
+        format='%(asctime)s - %(levelname)s - %(message)s'  # Format of log messages
+    )
+
+    logging.getLogger("requests").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING) 
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    
     parent_conn, child_conn = Pipe()
     world = World(child_conn)
     world.start()

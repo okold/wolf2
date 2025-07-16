@@ -6,29 +6,38 @@ import json
 
 class NPC(Actor):
 
-    CONTEXT_LIMIT = 20
-    CONTEXT_KEEP = 10
+    CONTEXT_LIMIT = 10
+    CONTEXT_KEEP = 5
     WAIT_MIN = 5
-    WAIT_MAX = 10
+    WAIT_MAX = 5
 
     SYSTEM_MESSAGE = """You are an actor in a role-playing system that functions like a chat room.
     Your output must be in valid JSON format:
-        { "action": <action_name>, "content": <varies_by_action>, "target": <name>, "reason": <text> }
+        { "action": <action_name>, "content": <varies_by_action>, "target": <name> }
 
     Available actions are:
-        - speak: whatever you say will be broadcast to others in the room.
-        Example: { "action": "speak", "content": "I am saying something!"}
+        - speak: whatever you say will be broadcast to others in the room. If two people try to speak at once, one may be interrupted.
+        Example: { "action": "speak", "content": "I am saying something."}
 
-        - think: do nothing, but process your context and consider your next action.
+        - yell: messages will always go through
+        Example: { "action": "yell", "content": "HANDS IN THE AIR! THIS IS A HOLD-UP!" }
+
+        - think: do nothing, but summarize your context and consider your next action.
         Example: { "action": "think" }
+
+        - listen: do nothing, waiting for more messages
+        Example: { "action": "listen" }
+
+        - skill: do something! the system will determine what stat and difficulty
+        Example: { "action": "skill", "content": "play the piano" }
 
         - give: give the target an item
         Example: { "action": "give", "content": "whiskey", "target": "Bandit" }
 
-        - shoot: shoot another player, giving them a 1/2 chance of being forcibly removed from the room.
-        Example: { "action": "shoot", "target": "Bandit", "reason": "Enforcing the law" }
+        - shoot: shoot another actor, with a 1/2 success chance
+        Example: { "action": "shoot", "target": "Bandit" }
 
-        - leave: you will disconnect from the system
+        - leave: if you do not wish to participate anymore
         Example: { "action": "leave" }
 
     Stay in character. Only act from your own perspective. Try to inject something new into the conversation.
@@ -36,18 +45,19 @@ class NPC(Actor):
     --LAST SUMMARY--
     """
 
-    def __init__(self, name, personality, goal):
-        super().__init__(name, personality, goal)
+    def __init__(self, name, personality, goal, str = 10, int = 10, cha = 10, lck = 10):
+        super().__init__(name, personality, goal, str, int, cha, lck)
         self.context = []
         self.llm = LLM()
         self.last_summary = "Your memories are fresh!"
+        self.last_output = None
 
     def summarize(self):
         prompt = self.context + [ 
                 {"role": "developer", "content": f"""Summarize the above log. Older messages will be deleted.
                  Make note how your character feels about the others. 
-                 Keep your summary in-character and in first person. You are {self.name}
-                 Consider what you would like your next actions to be.
+                 Keep your summary in-character and in first person. You are {self.name}, and your personality is {self.personality}
+                 Consider what you would like your next actions to be. Your primary goal is: {self.goal}
                  """}
                 ]
         
@@ -60,14 +70,14 @@ class NPC(Actor):
         print("-------------")
 
         # trim old messages
-        if len(self.context) > NPC.CONTEXT_KEEP:
+        if len(self.context) >= NPC.CONTEXT_LIMIT:
             self.context = self.context[NPC.CONTEXT_KEEP:]
-
-        print(self.context)
 
     def run(self):
         self.connect()
 
+        can_think = True
+        
         # main loop
         while True:
             try:
@@ -95,33 +105,33 @@ class NPC(Actor):
             try:
                 output = json.loads(output)
 
-                if output["action"] == "leave":
-                    break
+                if output == self.last_output:
+                    print(f"{self.name} is being repetitive.")
 
-                elif output["action"] == "shoot":
-                    pass
-
-                elif output["action"] == "think":
+                if output["action"] == "think" and can_think:
                     print(f"{self.name} has decided to think!")
                     self.summarize()
+                    can_think = False
 
-                elif output["action"] == "give":
+                elif output["action"] == "leave":
+                    break
+
+                elif output["action"] == 'listen':
+                    print(f"{self.name} has decided to listen.")
                     pass
 
-                else: 
-                    self.context.append(
-                        {"role": "assistant", "content": f"You: {output['content']}"}
-                    )
+                else:
+                    self.conn.send(output)
+                    self.last_output = output
 
-                self.conn.send(output)
+                if output["action"] != "think":
+                    can_think = True
 
-            except:
+            except Exception as e:
                 print("-------------")
-                print("json.loads() failed. Output:")
-                print(output)
+                print(e)
                 print("-------------")
-            
-            
+
             # hit max window size
             if len(self.context) >= NPC.CONTEXT_LIMIT:
                 self.summarize()
@@ -131,10 +141,10 @@ class NPC(Actor):
             #print(prompt)
     
 ## personality: (personality, goal)
-def create_npc(personality):
+def create_npc(preset):
     llm = LLM()
-    prompt = f"""Your personality is {personality[0]}.
-    Your main goal is: {personality[1]}. 
+    prompt = f"""Your personality is {preset['personality']}.
+    Your main goal is: {preset['goal']}. 
     Choose a western-style name for yourself.
     Your output must be one word with no symbols or punctuation."""
 
@@ -147,28 +157,25 @@ def create_npc(personality):
     name = name.replace('"', "")
     name = name.replace('!', "")
     name = name.replace('.', "")
-    return NPC(name, personality[0], personality[1])
+    return NPC(name, preset['personality'], preset['goal'], str = preset["str"], int = preset["int"], cha = preset["cha"], lck = preset["lck"])
         
-
-
 if __name__ == "__main__":
 
-    personalities = [
-        ("grumpy", "fight your headache" ), 
-        ("whimsical", "enable chaos"),
-        ("confrontational", "defend your honour")
+    presets = [
+        {"personality": "grumpy", "goal": "fight your headache", "str": 15, "int": 9, "cha": 8, "lck": 10 }, 
+        {"personality": "whimsical", "goal": "have fun", "str": 9, "int": 12, "cha": 15, "lck": 8 }, 
+        {"personality": "confrontational", "goal": "hunt bounties", "str": 14, "int": 10, "cha": 11, "lck": 9 }
     ]
 
-    mick = NPC("Mick", "gruff", "keep order in your bar")
-    bandit = NPC("Bandit", "aggressive", "be the first to shoot someone, be dramatic!")
+    mick = NPC("Mick", "gruff", "keep order in your bar", str = 14, int = 10, cha = 12, lck = 8)
+    bandit = NPC("Bandit", "aggressive", "be the first to shoot someone", str = 13, int = 11, cha = 8, lck = 13 )
 
     mick.start()
 
-    for personality in personalities:
-        npc = create_npc(personality)
+    for preset in presets:
+        npc = create_npc(preset)
         npc.start()
         time.sleep(random.randint(10,20))
-
 
     time.sleep(random.randint(30,60))
     bandit.start()
