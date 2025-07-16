@@ -7,18 +7,40 @@ ADDRESS = ("localhost", 6000)
 class Actor(Process):
     def __init__(self, name, personality, goal):
         super().__init__()
+
         self.name = name
         self.personality = personality
         self.goal = goal
 
+        self.str = 10 # feats of physical prowess
+        self.int = 10 # knowing things
+        self.cha = 10 # trade, convincing others
+        self.lck = 10 # for gambling, etc
+
         self.conn = None
         self.room_info = {}
+
+    def dict(self):
+        return {
+            "name": self.name,
+            "str": self.str,
+            "int": self.int,
+            "cha": self.cha,
+            "lck": self.lck
+        }
 
     def character_sheet(self):
         return f"""--CHARACTER SHEET--
         Your name is: {self.name}
         Your personality is: {self.personality}
         Your goal is: {self.goal}
+
+        STATS (10 is average): 
+        Strength:       {self.str}
+        Intelligence:   {self.int}
+        Charisma:       {self.cha}
+        Luck:           {self.lck}
+
         You are currently in a room named: {self.room_info['name']}
         The room's description is: {self.room_info['description']}
         ----"""
@@ -31,12 +53,12 @@ class Actor(Process):
                 self.conn = Client(ADDRESS)
             except ConnectionRefusedError:
                 time.sleep(1)    
-        self.conn.send(self.name)         # sends name
+        self.conn.send(self.dict()) # sends actor info to the server
 
         try:
             self.room_info = self.conn.recv() # receives environmental info
         except EOFError:
-            self.kill()
+            pass
 
     ## run()
     # STUB. Implemented in Player and NPC
