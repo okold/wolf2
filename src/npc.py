@@ -22,14 +22,8 @@ class NPC(Actor):
         - yell: messages will always go through
         Example: { "action": "yell", "content": "HANDS IN THE AIR! THIS IS A HOLD-UP!" }
 
-        - think: do nothing, but summarize your context and consider your next action.
-        Example: { "action": "think" }
-
         - listen: do nothing, waiting for more messages
         Example: { "action": "listen" }
-
-        - skill: do something! the system will determine what stat and difficulty
-        Example: { "action": "skill", "content": "play the piano" }
 
         - give: give the target an item
         Example: { "action": "give", "content": "whiskey", "target": "Bandit" }
@@ -80,102 +74,82 @@ class NPC(Actor):
         
         # main loop
         while True:
+            new_messages = False
             try:
                 time.sleep(random.randint(NPC.WAIT_MIN, NPC.WAIT_MAX)) # to keep things from going too fast
                 while self.conn.poll():
                     msg = self.conn.recv()
                     self.context.append(msg)
+                    new_messages = True
 
             except EOFError:
                 break
 
-            prompt = [
-                {"role": "developer", "content": NPC.SYSTEM_MESSAGE + "\n" + self.last_summary + "\n" + self.character_sheet()}
-            ] + self.context
+            if new_messages:
+                prompt = [
+                    {"role": "developer", "content": NPC.SYSTEM_MESSAGE + "\n" + self.last_summary + "\n" + self.character_sheet()}
+                ] + self.context
 
-            if self.context == []:
-                prompt.append(
-                    {"role": "developer", "content": "No messages! Say hello!"}
-                )
+                if self.context == []:
+                    prompt.append(
+                        {"role": "developer", "content": "No messages! Say hello!"}
+                    )
 
-            response = self.llm.prompt(prompt, json=True)
-            output = response.output_text
-            #print(output)
+                response = self.llm.prompt(prompt, json=True)
+                output = response.output_text
+                #print(output)
 
-            try:
-                output = json.loads(output)
+                try:
+                    output = json.loads(output)
 
-                if output == self.last_output:
-                    print(f"{self.name} is being repetitive.")
+                    if output == self.last_output:
+                        print(f"{self.name} is being repetitive.")
 
-                if output["action"] == "think" and can_think:
-                    print(f"{self.name} has decided to think!")
+                    if output["action"] == "think" and can_think:
+                        print(f"{self.name} has decided to think!")
+                        self.summarize()
+                        can_think = False
+
+                    elif output["action"] == "leave":
+                        break
+
+                    elif output["action"] == 'listen':
+                        print(f"{self.name} has decided to listen.")
+                        pass
+
+                    else:
+                        self.conn.send(output)
+                        self.last_output = output
+
+                    if output["action"] != "think":
+                        can_think = True
+
+                except Exception as e:
+                    print("-------------")
+                    print(e)
+                    print("-------------")
+
+                # hit max window size
+                if len(self.context) >= NPC.CONTEXT_LIMIT:
                     self.summarize()
-                    can_think = False
-
-                elif output["action"] == "leave":
-                    break
-
-                elif output["action"] == 'listen':
-                    print(f"{self.name} has decided to listen.")
-                    pass
-
-                else:
-                    self.conn.send(output)
-                    self.last_output = output
-
-                if output["action"] != "think":
-                    can_think = True
-
-            except Exception as e:
-                print("-------------")
-                print(e)
-                print("-------------")
-
-            # hit max window size
-            if len(self.context) >= NPC.CONTEXT_LIMIT:
-                self.summarize()
 
         self.conn.close()
         print(f"{self.name} disconnected!")
             #print(prompt)
     
-## personality: (personality, goal)
-def create_npc(preset):
-    llm = LLM()
-    prompt = f"""Your personality is {preset['personality']}.
-    Your main goal is: {preset['goal']}. 
-    Choose a western-style name for yourself.
-    Your output must be one word with no symbols or punctuation."""
-
-    response = llm.prompt(prompt)
-    name = response.output_text
-    print(name)
-    slices = name.split(' ')
-    name = slices[-1]
-    
-    name = name.replace('"', "")
-    name = name.replace('!', "")
-    name = name.replace('.', "")
-    return NPC(name, preset['personality'], preset['goal'], str = preset["str"], int = preset["int"], cha = preset["cha"], lck = preset["lck"])
         
 if __name__ == "__main__":
 
-    presets = [
-        {"personality": "grumpy", "goal": "fight your headache", "str": 15, "int": 9, "cha": 8, "lck": 10 }, 
-        {"personality": "whimsical", "goal": "have fun", "str": 9, "int": 12, "cha": 15, "lck": 8 }, 
-        {"personality": "confrontational", "goal": "hunt bounties", "str": 14, "int": 10, "cha": 11, "lck": 9 }
-    ]
-
-    mick = NPC("Mick", "gruff", "keep order in your bar", str = 14, int = 10, cha = 12, lck = 8)
-    bandit = NPC("Bandit", "aggressive", "be the first to shoot someone", str = 13, int = 11, cha = 8, lck = 13 )
+    mick = NPC("Mick", "stoic", "keep order in your bar", 14, 10, 11, 8)
+    robin = NPC("Robin", "grumpy", "fight your headache", 7, 11, 10, 10)
+    franklin = NPC("Franklin", "anxious", "stay alive", 9, 12, 8, 15)
+    maverick = NPC("Maverick", "bold", "hunt bounties", 14, 10, 11, 9)
+    bandit = NPC("Jim the Outlaw", "aggressive", "rob the saloon", 13, 8, 15, 10)
 
     mick.start()
-
-    for preset in presets:
-        npc = create_npc(preset)
-        npc.start()
-        time.sleep(random.randint(10,20))
-
+    time.sleep(5)
+    robin.start()
+    time.sleep(random.randint(30,60))
+    franklin.start()
     time.sleep(random.randint(30,60))
     bandit.start()

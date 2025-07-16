@@ -83,7 +83,10 @@ class World(Process):
         # main loop
         while True:
 
-            first_speaker = ""
+            max_cha = 0
+            speak_output = None
+            speak_actor = None
+
             # check for cli messages
             msg = self.try_recv(self.cli)
             if msg == "quit" or msg == "exit":
@@ -104,15 +107,10 @@ class World(Process):
                 # { "action": "speak", "content": "I am saying something!"}
                 # Echoes the content to the rest of the room.
                 elif msg["action"] == "speak":
-                    if allow_speak:
-                        output = f"{actor} says, \"{msg['content']}\""
-                        allow_speak = False
-                        first_speaker = actor
-                    else:
-                        output = f"{actor} tried to speak, but was interrupted by {first_speaker}!"
-                    logging.info(output)
-                    for agent2 in self.actors:
-                            self.actors[agent2]["conn"].send({"role": "user", "content": output})
+                    if self.actors[actor]["cha"] > max_cha:
+                        speak_output = f"{actor} says, \"{msg['content']}\""
+                        max_cha = self.actors[actor]["cha"]
+                        speak_actor = actor              
 
                 elif msg["action"] == "yell":
                     output = f"{actor} yells, \"{msg['content'].upper()}\""
@@ -208,6 +206,12 @@ class World(Process):
                     except:
                         pass
 
+            if speak_output:
+                logging.info(speak_output)
+                for actor in self.actors:
+                    if actor != speak_actor:
+                        self.actors[actor]["conn"].send({"role": "user", "content": speak_output})
+
             # cleans up flagged actors
             for actor in flagged_actors:
                 try:
@@ -229,10 +233,9 @@ class World(Process):
 
             self.actors_lock.release()
             time.sleep(World.WAIT_TIME)
-            allow_speak = True
 
 class Room():
-    def __init__(self, name = "Mick's", description = "A western-style saloon."):
+    def __init__(self, name = "Mick's", description = "A western-style space saloon, right at the edge of the galaxy."):
         self.name = name
         self.description = description
         self.actors = []

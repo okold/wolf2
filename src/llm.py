@@ -3,9 +3,12 @@ from openai import OpenAI
 from pydantic import BaseModel
 import logging
 
+# TODO: use BaseModels for newer LLMs, but have current method as a
+#       backup for older ones?
 class JSONMessage(BaseModel):
     action: str
-
+    content: str
+    target: list[str]
 
 ### LLM
 class LLM:
