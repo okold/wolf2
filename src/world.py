@@ -278,7 +278,7 @@ if __name__ == "__main__":
     timestamp = datetime.now()
 
     logging.basicConfig(
-        filename=f"logs/{timestamp.strftime('%Y-%m-%d %H-%M-%S')}.log",  # Name of the log file
+        filename=f"logs/world {timestamp.strftime('%Y-%m-%d %H-%M-%S')}.log",  # Name of the log file
         level=logging.INFO,  # Minimum logging level to capture (e.g., INFO, DEBUG, WARNING, ERROR, CRITICAL)
         format='%(asctime)s - %(levelname)s - %(message)s'  # Format of log messages
     )
