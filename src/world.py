@@ -14,12 +14,13 @@ ADDRESS = ("localhost", 6000)
 # The main server process for the game. Can receive messages from the 
 class World(Process):
 
-    WAIT_TIME = 3
+    WAIT_TIME = 3 # wait period between "rounds"
 
     def __init__(self, cli, default_room = None):
         super().__init__()
 
         self.llm = LLM()
+        self.output_log = []
 
         # for cli
         self.cli = cli
@@ -34,21 +35,40 @@ class World(Process):
         else:
             self.default_room = default_room
 
-        logging.info(f"Current Room: {self.default_room.name}")
-        logging.info(self.default_room.description)
+        self.print_info(f"Current Room: {self.default_room.name}")
+        self.print_info(self.default_room.description)
+
+    def print_info(self, message):
+        logging.info(message)
+        print(message)
 
     # safely attempts a recv from the provided connection
     def try_recv(self, conn):
-
         try:
             if conn.poll():
                 response = conn.recv()
                 return response
             return None
-        except:
-            logging.error("Failed to poll connection, returning leave message for actor.")
+        except Exception as e:
+            logging.error(f"Failed to poll connection, creating leave message for actor. Error message: {e}")
             return {"action": "leave"}
-        
+    
+    # NOTE: this is NOT THREAD SAFE, and is intended to be called already within a lock
+    def send_to_actor(self, actor, message, role = "user"):
+        self.actors[actor]["conn"].send({"role": role, "content": message})
+
+    # NOTE: this is NOT THREAD SAFE, and is intended to be called already within a lock
+    def broadcast(self, message, role = "user", exclude_actors = [], block_duplicates = True):
+        if message not in self.output_log or not block_duplicates:
+            self.print_info(message)
+            if block_duplicates:
+                self.output_log.append(message)
+            for actor in self.actors:
+                if actor not in exclude_actors:
+                    self.send_to_actor(actor, message, role)
+        else:
+            logging.warning(f"Blocked duplicate broadcast: {message}")
+
     def run(self):
 
         # thread for new connections
@@ -64,16 +84,14 @@ class World(Process):
 
                 if actor["name"] in self.actors:
                     conn.close() # TODO: error response for retries
-                else:
 
+                else:
                     self.actors[actor["name"]] = actor
                     actor["conn"] = conn
                     conn.send(self.default_room.dict())
 
-                    logging.info(f"{actor['name']} has entered the room!")
-                    for to_msg in self.actors:
-                        self.actors[to_msg]["conn"].send({"role": "user", "content": f"{actor['name']} has entered the room!"})
-
+                    arrival_message = f"{actor['name']} has entered the room!"
+                    self.broadcast(arrival_message)
                 
                 self.actors_lock.release()
 
@@ -83,21 +101,21 @@ class World(Process):
         # main loop
         while True:
 
+            # logic for who gets to successfully speak this round
             max_cha = 0
             speak_output = None
             speak_actor = None
+            interrupted_actors = []
+
+            flagged_actors = [] # flag bad connections for removal
 
             # check for cli messages
             msg = self.try_recv(self.cli)
             if msg == "quit" or msg == "exit":
                 break
 
-            flagged_actors = [] # flag bad connections for removal
-            allow_speak = True  # interference if two bots speak at once
-
             # check each actor for messages & forward
             self.actors_lock.acquire()
-
             for actor in self.actors:
                 msg = self.try_recv(self.actors[actor]["conn"])
                 if msg == None:
@@ -106,25 +124,36 @@ class World(Process):
                 ### speak
                 # { "action": "speak", "content": "I am saying something!"}
                 # Echoes the content to the rest of the room.
+                # Only the actor with the highest cha goes through
+                # Message is sent at the end of the main loop
                 elif msg["action"] == "speak":
                     if self.actors[actor]["cha"] > max_cha:
                         speak_output = f"{actor} says, \"{msg['content']}\""
                         max_cha = self.actors[actor]["cha"]
-                        speak_actor = actor              
 
+                        if speak_actor != None:
+                            interrupted_actors.append(actor)
+
+                        speak_actor = actor
+                    else:
+                        interrupted_actors.append(actor)
+
+                ### yell
+                # { "action": "yell", "content": "HANDS IN THE AIR! THIS IS A HOLD-UP!" }
+                # Unlike speak, always broadcasts.
                 elif msg["action"] == "yell":
                     output = f"{actor} yells, \"{msg['content'].upper()}\""
-                    logging.info(output)
-                    for agent2 in self.actors:
-                        self.actors[agent2]["conn"].send({"role": "user", "content": output})
+                    self.broadcast(output)
+
                 ### give
                 # { "action": "give", "content": "whiskey", "target": "Bandit" }
-                # TODO: an ACTUAL inventory system. for now, it's just pretend. for fun.
+                # TODO: an ACTUAL inventory system. for now, it's just pretend.
                 elif msg["action"] == "give":
-                    output = f"{actor} gave a(n) {msg['content']} to {msg['target']}"
-                    logging.info(output)
-                    for agent2 in self.actors:
-                            self.actors[agent2]["conn"].send({"role": "user", "content": output})
+                    if actor != msg["target"]: #prevents people from giving themselves things
+                        output = f"{actor} gave a(n) {msg['content']} to {msg['target']}"
+                        self.broadcast(output)
+                    else:
+                        logging.warning(f"Blocked {actor} from giving themselves something." )
 
                 ### skill_check
                 # { "action": "skill", "content": "play the piano" }
@@ -162,12 +191,8 @@ class World(Process):
                     response = self.llm.prompt(prompt)
                     output = response.output_text
 
-                    logging.info(output)
-
-                    for agent2 in self.actors:
-                        self.actors[agent2]["conn"].send({"role": "user", "content": output})
+                    self.broadcast(output)
                             
-
                 ### challenge
                 # { "action": "challenge", "content": "dance", "target": "Bandit"}
                 # TODO: STUB
@@ -177,6 +202,7 @@ class World(Process):
                 ### leave
                 # { "action": "leave" }
                 # Flags the requesting actor for clearing.
+                # Leavers are broadcast at the end of the loop
                 elif msg["action"] == "leave":
                     flagged_actors.append((actor, "left"))
 
@@ -190,27 +216,20 @@ class World(Process):
                         if roll >= 10:
                             output = f"BANG! {actor} has shot at {msg['target']}, and hit!"
                             flagged_actors.append((msg["target"], "killed"))
-                            for agent2 in self.actors:
-                                if agent2 != actor:
-                                    self.actors[agent2]["conn"].send({"role": "user", "content": output})
-                                else:
-                                    self.actors[agent2]["conn"].send({"role": "assistant", "content": f"BANG! I shot at {msg['target']}, and hit!"})
+                            self.broadcast(output, block_duplicates=False)
                         else:
                             output = f"BANG! {actor} has shot at {msg['target']}, and missed!"
-                            for agent2 in self.actors:
-                                if agent2 != actor:
-                                    self.actors[agent2]["conn"].send({"role": "user", "content": output})
-                                else:
-                                    self.actors[agent2]["conn"].send({"role": "assistant", "content": f"BANG! I shot at {msg['target']}, and missed!"})
-                        logging.info(output)
-                    except:
-                        pass
+                            self.broadcast(output, block_duplicates=False)
+                        
+                    except Exception as e:
+                        logging.warning(e)
 
+            # outputs speak messages
             if speak_output:
-                logging.info(speak_output)
-                for actor in self.actors:
-                    if actor != speak_actor:
-                        self.actors[actor]["conn"].send({"role": "user", "content": speak_output})
+                self.broadcast(speak_output)
+
+                for actor in interrupted_actors:
+                    self.send_to_actor(actor, f"You were interrupted by {speak_actor}!")
 
             # cleans up flagged actors
             for actor in flagged_actors:
@@ -219,19 +238,18 @@ class World(Process):
                     self.actors.pop(actor[0], None)
 
                     if actor[1] == "killed":
-                        msg = f"{actor[0]} has been killed!"
+                        output = f"{actor[0]} has been killed!"
                     else:
-                        msg = f"{actor[0]} has left the room!"
+                        output = f"{actor[0]} has left the room!"
 
-                    logging.info(msg)
+                    self.broadcast(output)
 
-                    for agent2 in self.actors:
-                        self.actors[agent2]["conn"].send({"role": "user", "content": msg})
-                except:
-                    pass
+                except Exception as e:
+                    logging.warning(e)
 
 
             self.actors_lock.release()
+
             time.sleep(World.WAIT_TIME)
 
 class Room():

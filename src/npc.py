@@ -65,7 +65,7 @@ class NPC(Actor):
 
         # trim old messages
         if len(self.context) >= NPC.CONTEXT_LIMIT:
-            self.context = self.context[NPC.CONTEXT_KEEP:]
+            self.context = self.context[NPC.CONTEXT_LIMIT - NPC.CONTEXT_KEEP:]
 
     def run(self):
         self.connect()
