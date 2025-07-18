@@ -2,11 +2,12 @@ from multiprocessing import Process, Pipe
 from threading import Thread, Lock
 from multiprocessing.connection import Listener, Pipe
 import time
-import logging
-from actor import Actor
+from room import Room
 import random
 from llm import LLM
 from datetime import datetime
+from npc import create_npc_logger
+import os
 
 ADDRESS = ("localhost", 6000)
 
@@ -35,11 +36,16 @@ class World(Process):
         else:
             self.default_room = default_room
 
+        timestamp = datetime.now()
+
+        # TODO: change this. This is bad. it works.
+        self.logger = create_npc_logger("World", timestamp)
+
         self.print_info(f"Current Room: {self.default_room.name}")
         self.print_info(self.default_room.description)
 
     def print_info(self, message):
-        logging.info(message)
+        self.logger.info(message)
         print(message)
 
     # safely attempts a recv from the provided connection
@@ -50,12 +56,15 @@ class World(Process):
                 return response
             return None
         except Exception as e:
-            logging.error(f"Failed to poll connection, creating leave message for actor. Error message: {e}")
+            self.logger.error(f"Failed to poll connection, creating leave message for actor. Error message: {e}")
             return {"action": "leave"}
     
     # NOTE: this is NOT THREAD SAFE, and is intended to be called already within a lock
     def send_to_actor(self, actor, message, role = "user"):
-        self.actors[actor]["conn"].send({"role": role, "content": message})
+        try:
+            self.actors[actor]["conn"].send({"role": role, "content": message})
+        except Exception as e:
+            self.logger.error(f"Failed to send message to {actor}: {e}")
 
     # NOTE: this is NOT THREAD SAFE, and is intended to be called already within a lock
     def broadcast(self, message, role = "user", exclude_actors = [], block_duplicates = True):
@@ -67,7 +76,7 @@ class World(Process):
                 if actor not in exclude_actors:
                     self.send_to_actor(actor, message, role)
         else:
-            logging.warning(f"Blocked duplicate broadcast: {message}")
+            self.logger.warning(f"Blocked duplicate broadcast: {message}")
 
     def run(self):
 
@@ -132,7 +141,7 @@ class World(Process):
                         max_cha = self.actors[actor]["cha"]
 
                         if speak_actor != None:
-                            interrupted_actors.append(actor)
+                            interrupted_actors.append(speak_actor)
 
                         speak_actor = actor
                     else:
@@ -153,7 +162,7 @@ class World(Process):
                         output = f"{actor} gave a(n) {msg['content']} to {msg['target']}"
                         self.broadcast(output)
                     else:
-                        logging.warning(f"Blocked {actor} from giving themselves something." )
+                        self.logger.warning(f"Blocked {actor} from giving themselves something." )
 
                 ### skill_check
                 # { "action": "skill", "content": "play the piano" }
@@ -222,7 +231,7 @@ class World(Process):
                             self.broadcast(output, block_duplicates=False)
                         
                     except Exception as e:
-                        logging.warning(e)
+                        self.logger.warning(e)
 
             # outputs speak messages
             if speak_output:
@@ -245,48 +254,14 @@ class World(Process):
                     self.broadcast(output)
 
                 except Exception as e:
-                    logging.warning(e)
+                    self.logger.warning(e)
 
 
             self.actors_lock.release()
 
             time.sleep(World.WAIT_TIME)
 
-class Room():
-    def __init__(self, name = "Mick's", description = "A western-style space saloon, right at the edge of the galaxy."):
-        self.name = name
-        self.description = description
-        self.actors = []
-
-    def dict(self):
-        return {
-            "name": self.name,
-            "description": self.description,
-            "actors": self.actors
-        }
-    
-    def add_actor(self, name):
-        self.actors.append(name)
-
-    def remove_actor(self, name):
-        self.actors.pop(name, None)
-
-    
-
 if __name__ == "__main__":
-
-    timestamp = datetime.now()
-
-    logging.basicConfig(
-        filename=f"logs/world {timestamp.strftime('%Y-%m-%d %H-%M-%S')}.log",  # Name of the log file
-        level=logging.INFO,  # Minimum logging level to capture (e.g., INFO, DEBUG, WARNING, ERROR, CRITICAL)
-        format='%(asctime)s - %(levelname)s - %(message)s'  # Format of log messages
-    )
-
-    logging.getLogger("requests").setLevel(logging.WARNING)
-    logging.getLogger("urllib3").setLevel(logging.WARNING) 
-    logging.getLogger("httpx").setLevel(logging.WARNING)
-    
     parent_conn, child_conn = Pipe()
     world = World(child_conn)
     world.start()

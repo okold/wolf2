@@ -1,3 +1,7 @@
 api.json
 .venv/
 logs/
+
+__pycache__/
+*.py[cod]
+*.pyo

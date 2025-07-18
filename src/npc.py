@@ -4,7 +4,23 @@ import time
 import random
 import json
 import logging
+import os
 from datetime import datetime
+
+def create_npc_logger(name: str, timestamp: datetime, log_dir: str = "logs") -> logging.Logger:
+    os.makedirs(log_dir, exist_ok=True)
+    log_filename = os.path.join(log_dir, f"{timestamp.strftime('%Y-%m-%d %H-%M-%S')} {name}.txt")
+    
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+
+    if not logger.handlers:  # Avoid duplicate handlers on reload
+        file_handler = logging.FileHandler(log_filename)
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+    
+    return logger
 
 class NPC(Actor):
 
@@ -14,7 +30,7 @@ class NPC(Actor):
     WAIT_MAX = 10
 
     SYSTEM_MESSAGE = """You are an actor in a role-playing system that functions like a chat room.
-    Your output must be in valid JSON format:
+        Your output must be valid JSON. Example:
         { "action": <action_name>, "content": <varies_by_action>, "target": <name> }
 
     Available actions are:
@@ -45,8 +61,11 @@ class NPC(Actor):
         super().__init__(name, personality, goal, str, int, cha, lck)
         self.context = []
         self.llm = LLM()
-        self.last_summary = "Your memories are fresh!"
+        self.last_summary = "My memories are fresh!"
         self.last_output = None
+
+        timestamp = datetime.now()
+        self.logger = create_npc_logger(name, timestamp)
 
     def summarize(self):
         prompt = self.context + [ 
@@ -60,7 +79,7 @@ class NPC(Actor):
         response = self.llm.prompt(prompt)
         self.last_summary = response.output_text
 
-        logging.info(f"{self.name} created a summary:\n{self.last_summary}")
+        self.logger.info(f"{self.name} created a summary:\n{self.last_summary}")
 
         # trim old messages
         if len(self.context) >= NPC.CONTEXT_LIMIT:
@@ -73,13 +92,13 @@ class NPC(Actor):
         while True:
             new_messages = False
             try:
-                logging.info(f"{self.name} is waiting for new messages")
+                self.logger.info(f"{self.name} is waiting for new messages")
                 time.sleep(random.randint(NPC.WAIT_MIN, NPC.WAIT_MAX)) # to keep things from going too fast
                 while self.conn.poll():
                     msg = self.conn.recv()
                     self.context.append(msg)
                     new_messages = True
-                    logging.info(f"{self.name} received world message: {msg}")
+                    self.logger.info(f"{self.name} received world message: {msg}")
 
             except EOFError:
                 break
@@ -93,37 +112,39 @@ class NPC(Actor):
                     prompt.append(
                         {"role": "developer", "content": "No messages! Say hello!"}
                     )
-                logging.info(f"{self.name} sending to LLM. Prompt:\n{prompt}")
+                self.logger.info(f"{self.name} sending to LLM. Prompt:\n{prompt}")
                 response = self.llm.prompt(prompt, json=True)
                 output = response.output_text
                 
-                logging.info(f"{self.name} received LLM response:\n{output}")
+                self.logger.info(f"{self.name} received LLM response:\n{output}")
 
                 try:
                     output = json.loads(output)
 
                     if output == self.last_output and output["action"] != 'listen':
-                        logging.warning(f"{self.name} is being repetitive.")
+                        self.logger.warning(f"{self.name} is being repetitive.")
+                    else:
+                        self.context.append({"role": "assistant", "content": response.output_text})
 
                     if output["action"] == "think":
-                        logging.info(f"{self.name} decided to think!")
+                        self.logger.info(f"{self.name} decided to think!")
                         self.summarize()
 
                     elif output["action"] == "leave":
-                        logging.info(f"{self.name} decided to leave!")
+                        self.logger.info(f"{self.name} decided to leave!")
                         break
 
                     elif output["action"] == 'listen':
-                        logging.info(f"{self.name} decided to listen!")
+                        self.logger.info(f"{self.name} decided to listen!")
                         pass
 
                     else:
-                        logging.info(f"{self.name} sent to world: {output}")
+                        self.logger.info(f"{self.name} sent to world: {output}")
                         self.conn.send(output)
-                        self.last_output = output
+                        
 
                 except Exception as e:
-                    logging.warning(e)
+                    self.logger.warning(e)
 
                 # hit max window size
                 if len(self.context) >= NPC.CONTEXT_LIMIT:
@@ -134,28 +155,20 @@ class NPC(Actor):
         
 if __name__ == "__main__":
 
-    timestamp = datetime.now()
+    mick = NPC("Mick", "stoic, speaks only when necessary", "keep order in your bar, keep outlaws out", cha=13)
+    robin = NPC("Robin", "grumpy, but with a good heart", "fight your headache, relax after a long day of work in the mines, stay in your bar stool", cha=10)
+    franklin = NPC("Franklin", "anxious, quick to leave", "lay low, hide the fact you have a bounty the next county over", cha=9)
+    maverick = NPC("Deadeye", "bold, with a bit too quick a trigger finger", "hunt bounties, make money", cha=12)
+    bandit = NPC("Sandy", "aggressive, a little unhinged", "rob the saloon, be the first to shoot someone", cha=11)
 
-    logging.basicConfig(
-        filename=f"logs/npcs {timestamp.strftime('%Y-%m-%d %H-%M-%S')}.log",  # Name of the log file
-        level=logging.INFO,  # Minimum logging level to capture (e.g., INFO, DEBUG, WARNING, ERROR, CRITICAL)
-        format='%(asctime)s - %(levelname)s - %(message)s'  # Format of log messages
-    )
-
-    logging.getLogger("requests").setLevel(logging.WARNING)
-    logging.getLogger("urllib3").setLevel(logging.WARNING) 
-    logging.getLogger("httpx").setLevel(logging.WARNING)
-
-    mick = NPC("Mick", "stoic", "keep order in your bar", 14, 10, 11, 8)
-    robin = NPC("Robin", "grumpy", "fight your headache", 7, 11, 10, 10)
-    franklin = NPC("Franklin", "anxious", "stay alive", 9, 12, 8, 15)
-    maverick = NPC("Maverick", "bold", "hunt bounties", 14, 10, 11, 9)
-    bandit = NPC("Jim the Outlaw", "aggressive", "rob the saloon", 13, 8, 15, 10)
-
-    mick.start()
-    time.sleep(5)
-    robin.start()
-    time.sleep(random.randint(30,60))
-    franklin.start()
-    time.sleep(random.randint(30,60))
-    bandit.start()
+    try:
+        mick.start()
+        robin.start()
+        time.sleep(random.randint(21,30))
+        franklin.start()
+        time.sleep(random.randint(30,42))
+        bandit.start()
+        time.sleep(random.randint(21,42))
+        maverick.start()
+    except ConnectionResetError as e:
+        print("Server closed, all agents died.")
