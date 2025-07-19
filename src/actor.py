@@ -48,25 +48,25 @@ class Actor(Process):
     ## connect()
     # TODO: error handling on messages, success codes
     def connect(self):
-        while self.conn == None:
+        attempt_counter = 5
+
+        while self.conn == None and attempt_counter > 0:
             try:    
                 self.conn = Client(ADDRESS)
             except ConnectionRefusedError:
-                time.sleep(1)    
-        self.conn.send(self.dict()) # sends actor info to the server
+                time.sleep(1)
+                attempt_counter -= 1    
+       
+        if self.conn != None:
+            self.conn.send(self.dict()) # sends actor info to the server
 
-        try:
-            self.room_info = self.conn.recv() # receives environmental info
-        except EOFError:
-            pass
-
-    ## run()
-    # STUB. Implemented in Player and NPC
-    def run(self):
-        self.connect()
-
-        while True:
-            pass
+            try:
+                self.room_info = self.conn.recv() # receives environmental info
+                return True
+            except EOFError:
+                return False
+        else:
+            return False
 
 if __name__ == "__main__":
     bob = Actor("Bob")

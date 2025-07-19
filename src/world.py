@@ -129,109 +129,115 @@ class World(Process):
                 msg = self.try_recv(self.actors[actor]["conn"])
                 if msg == None:
                     pass
+                else:
+                    ### speak
+                    # { "action": "speak", "content": "I am saying something!"}
+                    # Echoes the content to the rest of the room.
+                    # Only the actor with the highest cha goes through
+                    # Message is sent at the end of the main loop
+                    if msg["action"] == "speak" or (msg["action"] == "give" and "content" in msg):
 
-                ### speak
-                # { "action": "speak", "content": "I am saying something!"}
-                # Echoes the content to the rest of the room.
-                # Only the actor with the highest cha goes through
-                # Message is sent at the end of the main loop
-                elif msg["action"] == "speak":
-                    if self.actors[actor]["cha"] > max_cha:
-                        speak_output = f"{actor} says, \"{msg['content']}\""
-                        max_cha = self.actors[actor]["cha"]
-
-                        if speak_actor != None:
-                            interrupted_actors.append(speak_actor)
-
-                        speak_actor = actor
-                    else:
-                        interrupted_actors.append(actor)
-
-                ### yell
-                # { "action": "yell", "content": "HANDS IN THE AIR! THIS IS A HOLD-UP!" }
-                # Unlike speak, always broadcasts.
-                elif msg["action"] == "yell":
-                    output = f"{actor} yells, \"{msg['content'].upper()}\""
-                    self.broadcast(output)
-
-                ### give
-                # { "action": "give", "content": "whiskey", "target": "Bandit" }
-                # TODO: an ACTUAL inventory system. for now, it's just pretend.
-                elif msg["action"] == "give":
-                    if actor != msg["target"]: #prevents people from giving themselves things
-                        output = f"{actor} gave a(n) {msg['content']} to {msg['target']}"
-                        self.broadcast(output)
-                    else:
-                        self.logger.warning(f"Blocked {actor} from giving themselves something." )
-
-                ### skill_check
-                # { "action": "skill", "content": "play the piano" }
-                elif msg["action"] == "skill":
-                    system_message = f"""Translate a skill check into a sentence. You may determine success or failure.
-
-                    Example input (success):
-                    "action": "skill", "content": "play the piano" 
-                    actor: "name": "Robin", "str": 7, "int": 11, "cha": "14", "lck": "10"
-
-                    Example output (success):
-                    Robin skillfuly played an upbeat tune on the piano.
-
-                    Example input (failure):
-                    "action": "skill", "content": "arm wrestle"
-                    actor: "name": "Robin", "str": 7, "int": 11, "cha": "14", "lck": "10"
-                    target: "name": "Mick", "str": 14, "int": 10, "cha": "12", "lck": "8"
-
-                    Example output (failure):
-                    Try as she might, Robin couldn't beat Mick at an arm wrestle!
-                    """
-
-                    prompt = [
-                        { "role": "developer", "content": system_message},
-                        { "role": "user", "content": f"{msg}"},
-                        { "role": "user", "content": f"actor: {self.actors[actor]}"}
-                    ]
-
-                    try:
-                        if msg["target"] and msg["target"] != "self":
-                            prompt += [{"role": "user", "content": f"target: {self.actors[msg['target']]}"}]
-                    except KeyError:
-                        pass # usually just means the LLM is trying something like "everyone"
-
-                    response = self.llm.prompt(prompt)
-                    output = response.output_text
-
-                    self.broadcast(output)
-                            
-                ### challenge
-                # { "action": "challenge", "content": "dance", "target": "Bandit"}
-                # TODO: STUB
-                elif msg["action"] == "challenge":
-                    pass
-
-                ### leave
-                # { "action": "leave" }
-                # Flags the requesting actor for clearing.
-                # Leavers are broadcast at the end of the loop
-                elif msg["action"] == "leave":
-                    flagged_actors.append((actor, "left"))
-
-                ### shoot
-                # { "action": "shoot", "target": "Bandit", "reason": "Enforcing the law." }
-                # Shooting the target has a 1/2 chance of success.
-                # Killed targets will be flagged for removal.
-                elif msg["action"] == "shoot":
-                    try:
-                        roll = random.randint(1,20)
-                        if roll >= 10:
-                            output = f"BANG! {actor} has shot at {msg['target']}, and hit!"
-                            flagged_actors.append((msg["target"], "killed"))
-                            self.broadcast(output, block_duplicates=False)
+                        if msg["action"] == "speak":
+                            speech = msg["content"]
                         else:
-                            output = f"BANG! {actor} has shot at {msg['target']}, and missed!"
-                            self.broadcast(output, block_duplicates=False)
-                        
-                    except Exception as e:
-                        self.logger.warning(e)
+                            speech = msg["comment"]
+
+                        if self.actors[actor]["cha"] > max_cha:
+                            speak_output = f"{actor} says, \"{speech}\""
+                            max_cha = self.actors[actor]["cha"]
+
+                            if speak_actor != None:
+                                interrupted_actors.append(speak_actor)
+
+                            speak_actor = actor
+                        else:
+                            interrupted_actors.append(actor)
+
+                    ### yell
+                    # { "action": "yell", "content": "HANDS IN THE AIR! THIS IS A HOLD-UP!" }
+                    # Unlike speak, always broadcasts.
+                    if msg["action"] == "yell":
+                        output = f"{actor} yells, \"{msg['content'].upper()}\""
+                        self.broadcast(output)
+
+                    ### give
+                    # { "action": "give", "content": "whiskey", "target": "Bandit" }
+                    # TODO: an ACTUAL inventory system. for now, it's just pretend.
+                    if msg["action"] == "give":
+                        if actor != msg["target"]: #prevents people from giving themselves things
+                            output = f"{actor} gave a(n) {msg['content']} to {msg['target']}"
+                            self.broadcast(output)
+                        else:
+                            self.logger.warning(f"Blocked {actor} from giving themselves something." )
+
+                    ### skill_check
+                    # { "action": "skill", "content": "play the piano" }
+                    if msg["action"] == "skill":
+                        system_message = f"""Translate a skill check into a sentence. You may determine success or failure.
+
+                        Example input (success):
+                        "action": "skill", "content": "play the piano" 
+                        actor: "name": "Robin", "str": 7, "int": 11, "cha": "14", "lck": "10"
+
+                        Example output (success):
+                        Robin skillfuly played an upbeat tune on the piano.
+
+                        Example input (failure):
+                        "action": "skill", "content": "arm wrestle"
+                        actor: "name": "Robin", "str": 7, "int": 11, "cha": "14", "lck": "10"
+                        target: "name": "Mick", "str": 14, "int": 10, "cha": "12", "lck": "8"
+
+                        Example output (failure):
+                        Try as she might, Robin couldn't beat Mick at an arm wrestle!
+                        """
+
+                        prompt = [
+                            { "role": "developer", "content": system_message},
+                            { "role": "user", "content": f"{msg}"},
+                            { "role": "user", "content": f"actor: {self.actors[actor]}"}
+                        ]
+
+                        try:
+                            if msg["target"] and msg["target"] != "self":
+                                prompt += [{"role": "user", "content": f"target: {self.actors[msg['target']]}"}]
+                        except KeyError:
+                            pass # usually just means the LLM is trying something like "everyone"
+
+                        response = self.llm.prompt(prompt)
+                        output = response.output_text
+
+                        self.broadcast(output)
+                                
+                    ### challenge
+                    # { "action": "challenge", "content": "dance", "target": "Bandit"}
+                    # TODO: STUB
+                    if msg["action"] == "challenge":
+                        pass
+
+                    ### leave
+                    # { "action": "leave" }
+                    # Flags the requesting actor for clearing.
+                    # Leavers are broadcast at the end of the loop
+                    if msg["action"] == "leave":
+                        flagged_actors.append((actor, "left"))
+
+                    ### shoot
+                    # { "action": "shoot", "target": "Bandit", "reason": "Enforcing the law." }
+                    # Shooting the target has a 1/2 chance of success.
+                    # Killed targets will be flagged for removal.
+                    if msg["action"] == "shoot":
+                        try:
+                            roll = random.randint(1,20)
+                            if roll >= 10:
+                                output = f"BANG! {actor} has shot at {msg['target']}, and hit!"
+                                flagged_actors.append((msg["target"], "killed"))
+                                self.broadcast(output, block_duplicates=False)
+                            else:
+                                output = f"BANG! {actor} has shot at {msg['target']}, and missed!"
+                                self.broadcast(output, block_duplicates=False)
+                            
+                        except Exception as e:
+                            self.logger.warning(e)
 
             # outputs speak messages
             if speak_output:
