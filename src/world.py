@@ -62,7 +62,7 @@ class World(Process):
     # NOTE: this is NOT THREAD SAFE, and is intended to be called already within a lock
     def send_to_actor(self, actor, message, role = "user"):
         try:
-            self.actors[actor]["conn"].send({"role": role, "content": message})
+            self.actors[actor]["conn"].send({"type": "context", "content": {"role": role, "content": message}})
         except Exception as e:
             self.logger.error(f"Failed to send message to {actor}: {e}")
 
@@ -77,6 +77,10 @@ class World(Process):
                     self.send_to_actor(actor, message, role)
         else:
             self.logger.warning(f"Blocked duplicate broadcast: {message}")
+
+    def broadcast_room_state(self):
+        for actor in self.actors:
+            self.actors[actor]["conn"].send({"type": "room", "content": self.default_room.dict()})
 
     def run(self):
 
@@ -101,6 +105,8 @@ class World(Process):
 
                     arrival_message = f"{actor['name']} has entered the room!"
                     self.broadcast(arrival_message)
+                    self.default_room.add_actor(actor["name"])
+                    self.broadcast_room_state()
                 
                 self.actors_lock.release()
 
@@ -241,30 +247,33 @@ class World(Process):
 
             # outputs speak messages
             if speak_output:
-                self.broadcast(speak_output)
+                self.broadcast(speak_output, exclude_actors=[speak_actor])
 
                 for actor in interrupted_actors:
                     self.send_to_actor(actor, f"You were interrupted by {speak_actor}!")
 
             # cleans up flagged actors
-            for actor in flagged_actors:
-                try:
-                    self.actors[actor[0]]["conn"].close()
-                    self.actors.pop(actor[0], None)
+            if flagged_actors:
+                for actor in flagged_actors:
+                    try:
+                        self.actors[actor[0]]["conn"].close()
+                        self.actors.pop(actor[0], None)
 
-                    if actor[1] == "killed":
-                        output = f"{actor[0]} has been killed!"
-                    else:
-                        output = f"{actor[0]} has left the room!"
+                        if actor[1] == "killed":
+                            output = f"{actor[0]} has been killed!"
+                            self.default_room.kill_actor(actor[0])
+                        else:
+                            output = f"{actor[0]} has left the room!"
+                            self.default_room.remove_actor(actor[0])
 
-                    self.broadcast(output)
+                        self.broadcast(output)
+                    except Exception as e:
 
-                except Exception as e:
-                    self.logger.warning(e)
-
+                        self.logger.warning(e)
+                self.broadcast_room_state()
 
             self.actors_lock.release()
-
+            
             time.sleep(World.WAIT_TIME)
 
 if __name__ == "__main__":

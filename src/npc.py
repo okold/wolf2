@@ -1,4 +1,5 @@
 from actor import Actor
+from context import SummaryContext
 from llm import LLM
 import time
 import random
@@ -26,8 +27,6 @@ class NPC(Actor):
 
     WAIT_MIN_ABS = 5
     WAIT_MAX_ABS = 15
-    CONTEXT_LIMIT = 30
-    CONTEXT_KEEP = 10
 
     SYSTEM_MESSAGE = """You are an actor in a role-playing system that functions like a chat room.
         Your output must be valid JSON. Example:
@@ -53,53 +52,26 @@ class NPC(Actor):
         - leave: if you do not wish to participate anymore
         Example: { "action": "leave" }
 
-    Stay in character. Only act from your own perspective. Try to inject something new into the conversation.
-
-    --LAST SUMMARY--
+    Stay in character. 
+    Only act from your own perspective. 
+    Try to inject something new into the conversation.
+    You may only do one action at a time.
     """
 
     def __init__(self, name, personality, goal, str = 10, int = 10, cha = 10, lck = 10):
         super().__init__(name, personality, goal, str, int, cha, lck)
-        self.context = []
         self.llm = LLM()
-        self.last_summary = "My memories are fresh!"
-        self.last_output = None
 
-        # affects random rolls
-        self.lck_mod = lck - 10
-        self.int_mod = int - 10
+        # by default, uses its own LLM for context management, but in theory,
+        # could use a different LLM for summarizing than for dialogue generation
+        self.context = SummaryContext(self.name, self.personality, self.goal, self.llm)
+        self.last_output = None
 
         self.wait_min = 10 - self.lck_mod - self.int_mod
         self.wait_max = self.wait_min + abs(self.lck_mod) + abs(self.int_mod)
 
         timestamp = datetime.now()
         self.logger = create_npc_logger(name, timestamp)
-
-    def summarize(self):
-        prompt = self.context + [ 
-                {"role": "developer", "content": f"""Summarize the above log.
-                 
-                 Make note of:
-                 - Every character you've met.
-                 - What you feel about them.
-                 - Whether a character has left or died, and why.
-
-                 Keep your summary in-character and in first person. You are {self.name}, and your personality is {self.personality}
-                 Consider what you would like your next actions to be. Your primary goal is: {self.goal}
-
-                Your previous summary was this. Expand and tweak it:
-                {self.last_summary}
-                 """}
-                ]
-        
-        response = self.llm.prompt(prompt)
-        self.last_summary = response.output_text
-
-        self.logger.info(f"{self.name} created a summary:\n{self.last_summary}")
-
-        # trim old messages
-        if len(self.context) >= NPC.CONTEXT_LIMIT:
-            self.context = self.context[NPC.CONTEXT_LIMIT - NPC.CONTEXT_KEEP:]
 
     def run(self):
         self.connect()
@@ -110,12 +82,16 @@ class NPC(Actor):
         while True:
             new_messages = False
             try:
-                time.sleep(random.randint(self.wait_min, self.wait_max)) # to keep things from going too fast
                 self.logger.info(f"{self.name} is checking for new messages")
                 while self.conn.poll():
                     msg = self.conn.recv()
-                    self.context.append(msg)
-                    new_messages = True
+
+                    if msg["type"] == "context":
+                        self.context.append(msg["content"])
+                        new_messages = True
+                    elif msg["type"] == "room":
+                        self.room_info = msg["content"]
+
                     self.logger.info(f"{self.name} received world message: {msg}")
 
             except EOFError:
@@ -123,10 +99,10 @@ class NPC(Actor):
 
             if new_messages or quiet_round_passed:
                 prompt = [
-                    {"role": "developer", "content": NPC.SYSTEM_MESSAGE + "\n" + self.last_summary + "\n" + self.character_sheet()}
-                ] + self.context
+                    {"role": "developer", "content": NPC.SYSTEM_MESSAGE + "\n" + self.character_sheet() + "\n" + self.context.summary}
+                ] + self.context.context
 
-                if self.context == []:
+                if self.context.context == []:
                     prompt.append(
                         {"role": "developer", "content": "No messages! Say hello!"}
                     )
@@ -134,7 +110,7 @@ class NPC(Actor):
                 response = self.llm.prompt(prompt, json=True)
                 output = response.output_text
                 
-                self.logger.info(f"{self.name} received LLM response:\n{output}")
+                self.logger.info(f"{self.name} received LLM response:\n{response.output}")
 
                 try:
                     output = json.loads(output)
@@ -144,11 +120,8 @@ class NPC(Actor):
                     else:
                         self.context.append({"role": "assistant", "content": response.output_text})
 
-                    if output["action"] == "think":
-                        self.logger.info(f"{self.name} decided to think!")
-                        self.summarize()
 
-                    elif output["action"] == "leave":
+                    if output["action"] == "leave":
                         self.logger.info(f"{self.name} decided to leave!")
                         break
 
@@ -163,10 +136,6 @@ class NPC(Actor):
 
                 except Exception as e:
                     self.logger.warning(e)
-
-                # hit max window size
-                if len(self.context) >= NPC.CONTEXT_LIMIT:
-                    self.summarize()
                 
                 quiet_round_passed = False
             
@@ -174,6 +143,9 @@ class NPC(Actor):
                 self.context.append({"role": "developer", "content": "It's quiet."})
                 self.logger.info("Added quiet message to context.")
                 quiet_round_passed = True
+
+            # to keep things from going too fast
+            time.sleep(random.randint(self.wait_min, self.wait_max)) 
 
         self.conn.close()
     

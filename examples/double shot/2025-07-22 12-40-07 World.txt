@@ -1,0 +1,41 @@
+2025-07-22 12:40:07,713 - INFO - Current Room: Mick's
+2025-07-22 12:40:07,713 - INFO - A western-style space saloon, right at the edge of the galaxy. The radio is playing cool jazz, and the lights are buzzing overhead. On the wall is a poster depicting current bounties, and right front and center you see: WANTED - SANDY THE OUTLAW - 50 MILLION DOUBLE-CREDITS - DEAD OR ALIVE
+2025-07-22 12:40:10,333 - INFO - Mick has entered the room!
+2025-07-22 12:40:10,334 - INFO - Robin has entered the room!
+2025-07-22 12:40:31,720 - INFO - Robin says, "Ugh, cut the fanfare. I’m just here for a drink. Barkeep, a whiskey, neat."
+2025-07-22 12:40:34,721 - INFO - Mick says, "Evening. State your business in my bar."
+2025-07-22 12:40:41,337 - INFO - Franklin has entered the room!
+2025-07-22 12:40:49,723 - INFO - Robin says, "Great, another one walks in. Keep it down—I’m trying to relax with my whiskey."
+2025-07-22 12:40:58,725 - INFO - Mick gave a(n) whiskey to Robin
+2025-07-22 12:40:58,725 - INFO - Mick says, "Here, neat."
+2025-07-22 12:41:01,726 - INFO - Franklin says, "Sorry about that. I’m just passing through and looking for work. Know of any job openings around here?"
+2025-07-22 12:41:10,729 - INFO - Robin says, "Work? Ha. If you’re tough enough to haul ore off the Blackrock Belt, the mine’s always hiring—though they’ll work you ‘til you drop. Or if you’ve got a death wish, there’s a 50 million–credit bounty on Sandy the Outlaw. Dead or alive. Don’t come crying if you end up dead. Now buy the house a drink and I might point you toward Mick."
+2025-07-22 12:41:19,731 - INFO - Mick says, "Franklin, this ain’t an employment agency. If you’re thirsty, order a drink. Otherwise, check the station in town for work."
+2025-07-22 12:41:22,732 - INFO - Franklin says, "Alright, I’ll buy a round. Whiskey for everyone. Um, Robin—you said you might point me to Mick? Name’s Franklin. I’m more into ore hauling than outlaw hunting, if you catch my drift."
+2025-07-22 12:41:28,734 - INFO - Robin says, "Kid, you ain’t in an employment agency—this is a saloon. Order a drink or haul your sorry self to the station like Mick said. Otherwise, keep your questions to yourself."
+2025-07-22 12:41:40,737 - INFO - Mick gave a(n) whiskey to Franklin
+2025-07-22 12:41:40,738 - INFO - Mick says, "Your round."
+2025-07-22 12:41:43,740 - INFO - Franklin says, "Mick, I’ll take a whiskey neat, please. Thanks—just need something to calm my nerves."
+2025-07-22 12:41:48,345 - INFO - Sandy has entered the room!
+2025-07-22 12:41:49,741 - INFO - Robin says, "Well, I’ll be damned. Thanks for the round, Franklin. If you’re looking for ore jobs, the loading bay’s your spot—ask Sarge. Now let’s get this whiskey down before I start regretting it."
+2025-07-22 12:42:04,745 - INFO - Mick yells, "SANDY, YOU’RE A WANTED MAN. OUT NOW OR I’LL SHOOT."
+2025-07-22 12:42:04,747 - ERROR - Failed to poll connection, creating leave message for actor. Error message: 
+2025-07-22 12:42:04,747 - INFO - Franklin has left the room!
+2025-07-22 12:42:07,749 - INFO - Sandy yells, "ALL RIGHT, YOU COWARDS! HANDS UP AND EMPTY YOUR WALLETS—NOW!"
+2025-07-22 12:42:07,750 - INFO - Robin says, "Well, well, if it ain't Sandy the Outlaw himself. Keep your hands where I can see ’em, or I’ll flag down Mick to show you the door."
+2025-07-22 12:42:25,754 - INFO - BANG! Mick has shot at Sandy, and missed!
+2025-07-22 12:42:25,755 - INFO - BANG! Robin has shot at Sandy, and hit!
+2025-07-22 12:42:25,756 - INFO - BANG! Sandy has shot at Robin, and hit!
+2025-07-22 12:42:25,756 - INFO - Sandy has been killed!
+2025-07-22 12:42:25,757 - INFO - Robin has been killed!
+2025-07-22 12:42:42,346 - INFO - Deadeye has entered the room!
+2025-07-22 12:42:58,762 - INFO - Deadeye says, "Well now, looks like I’ve stepped into Mick’s just in time. That Sandy the Outlaw bounty’s calling my name—50 million double-credits dead or alive. Time to take a closer look at that poster."
+2025-07-22 12:43:01,764 - INFO - Mick says, "Deadeye. Step forward and show your hands. ID yourself. Any weapons on you?"
+2025-07-22 12:43:13,766 - INFO - Deadeye says, "Sure thing, Mick. Name’s Deadeye. I’ve got a pair of revolvers on my hips in plain sight—no surprises in my coat. Feel free to take a look."
+2025-07-22 12:43:25,769 - INFO - Mick says, "Let me see your permits for those revolvers. Lay ’em on the bar."
+2025-07-22 12:43:34,771 - INFO - Deadeye gave a(n) revolver permits to Mick
+2025-07-22 12:43:34,772 - INFO - Deadeye says, "Here you are, Mick. Straight from the Galactic Marshal’s office—legit as they come."
+2025-07-22 12:43:43,774 - INFO - Deadeye says, "Mick, now that the paperwork’s in order, mind if I take a closer look at that wanted poster? And maybe hear any rumors on where Sandy’s been hanging around?"
+2025-07-22 12:43:46,775 - INFO - Mick says, "Permit’s valid. You’re clear… but keep those irons holstered and play nice. Don’t give me a reason to throw you out."
+2025-07-22 12:43:58,778 - INFO - Deadeye says, "Thanks, Mick. Keeping ’em holstered. Now then… anyone here got tips on where Sandy’s been hiding out? Could save me some time."
+2025-07-22 12:44:07,781 - INFO - Mick says, "Word is Sandy’s been laying low out by Outpost Vega, near the freighter docks by the Ripple Nebula. Last sighting was two days ago at the old derelict loading bays. That’s your best lead."

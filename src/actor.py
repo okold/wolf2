@@ -17,10 +17,14 @@ class Actor(Process):
         self.cha = cha # trade, convincing others
         self.lck = lck # for gambling, etc
 
+        # affects random rolls
+        self.lck_mod = lck - 10
+        self.int_mod = int - 10
+
         self.conn = None
         self.room_info = {}
 
-    def dict(self):
+    def dict(self) -> dict:
         return {
             "name": self.name,
             "str": self.str,
@@ -29,8 +33,8 @@ class Actor(Process):
             "lck": self.lck
         }
 
-    def character_sheet(self):
-        return f"""--CHARACTER SHEET--
+    def character_sheet(self) -> str:
+        desc = f"""--CHARACTER SHEET--
         Your name is: {self.name}
         Your personality is: {self.personality}
         Your goal is: {self.goal}
@@ -43,7 +47,15 @@ class Actor(Process):
 
         You are currently in a room named: {self.room_info['name']}
         The room's description is: {self.room_info['description']}
-        ----"""
+        The people in the room are:
+        """
+
+        for actor in self.room_info["actors"]:
+            desc += f" - {actor}: status - {self.room_info['actors'][actor]['status']}"
+
+        desc += "---"
+
+        return desc
 
     ## connect()
     # TODO: error handling on messages, success codes
