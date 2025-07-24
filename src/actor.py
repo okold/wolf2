@@ -27,6 +27,19 @@ class ActorMessage(BaseModel):
 
 
 class Actor(Process):
+    """
+    An Actor that can connect to a World.
+
+    Args:
+        name (str): the actor's name
+        personality (str): a description of the actor's personality
+        goal (str): a description of the actor's primary goal
+        status (Optional[str]): dead/alive status of the actor
+        strength (Optional[int]): affects physical skill checks
+        intelligence (Optional[int]): affects knowledge-based skill checks
+        charisma (Optional[int]): affects speaking priority
+        luck (Optional[int]): affects various things
+    """
     def __init__(self, name, personality, goal, strength = 10, intelligence = 10, charisma = 10, luck = 10, status = "alive"):
         super().__init__()
 
@@ -47,7 +60,10 @@ class Actor(Process):
         self.conn = None
         self.room_info = {}
 
-    def server_dict(self) -> ActorMessage:
+    def dict_server(self) -> ActorMessage:
+        """
+        Returns an ActorMessage containing the name, status, and stats of the Actor.
+        """
         return {
             "name": self.name,
             "status": self.status,
@@ -57,13 +73,20 @@ class Actor(Process):
             "luck": self.luck
         }
     
-    def public_dict(self) -> ActorMessage:
+    def dict_public(self) -> ActorMessage:
+        """
+        Returns an ActorMessage containing the name and status of the Actor.
+        """
         return {
             "name": self.name,
             "status": self.status
         }
 
     def character_sheet(self) -> str:
+        """
+        Returns a character sheet, for use in LLM contexts.
+        """
+
         desc = f"""--CHARACTER SHEET--
         Your name is: {self.name}
         Your personality is: {self.personality}
@@ -90,6 +113,9 @@ class Actor(Process):
     ## connect()
     # TODO: error handling on messages, success codes
     def connect(self):
+        """
+        Attempts to connect to the server five times, then gives up.
+        """
         attempt_counter = 5
 
         while self.conn == None and attempt_counter > 0:
@@ -100,7 +126,7 @@ class Actor(Process):
                 attempt_counter -= 1    
        
         if self.conn != None:
-            self.conn.send(self.server_dict()) # sends actor info to the server
+            self.conn.send(self.dict_server()) # sends actor info to the server
 
             try:
                 self.room_info = self.conn.recv() # receives environmental info

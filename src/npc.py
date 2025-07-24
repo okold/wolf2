@@ -9,6 +9,14 @@ import os
 from datetime import datetime
 
 def create_npc_logger(name: str, timestamp: datetime, log_dir: str = "logs") -> logging.Logger:
+    """
+    Creates a logger.
+
+    Args:
+        name (str): the name of the logger, appended to the end of the filename
+        timestamp (datetime): placed at the head of the filename
+        log_dir (str): directory of the log
+    """
     os.makedirs(log_dir, exist_ok=True)
     log_filename = os.path.join(log_dir, f"{timestamp.strftime('%Y-%m-%d %H-%M-%S')} {name}.txt")
     
@@ -30,11 +38,16 @@ class NPC(Actor):
 
     SYSTEM_MESSAGE = """You are an actor in a role-playing system that functions like a chat room.
         Your output must be valid JSON. Example:
-        { "action": <action_name>, "content": <varies_by_action>, "target": <name> }
+        { "action": <action_name>, "content": <varies_by_action>, "target": <name>, "comment": <additional_dialogue> }
 
     Available actions are:
         - speak: whatever you say will be broadcast to others in the room. If two people try to speak at once, one may be interrupted.
         Example: { "action": "speak", "content": "I am saying something."}
+
+        - gesture: allows you to gesture
+            - comment is optional
+        Example: { "action": "gesture", "content": "throws her hands in the air" }
+        Example: { "action": "gesture", "content": "points at the Bandit", "comment": "You're a wanted criminal!" }
 
         - yell: messages will always go through
         Example: { "action": "yell", "content": "HANDS IN THE AIR! THIS IS A STICK-UP!" }
@@ -43,7 +56,10 @@ class NPC(Actor):
         Example: { "action": "listen" }
 
         - give: give the target an item
-        - the comment is optional
+            - comment is optional
+            - gesture is optional
+        Example: { "action": "give", "content": "side eye", "target": "Franklin" }
+        Example: { "action": "give", "content": "battery", "target": "Lola", "gesture": "slides the battery across the counter" }
         Example: { "action": "give", "content": "whiskey", "target": "Bandit", "comment": "Here you go!" }
 
         - shoot: shoot another actor, with a 1/2 success chance
@@ -51,6 +67,7 @@ class NPC(Actor):
 
         - leave: if you do not wish to participate anymore
         Example: { "action": "leave" }
+
 
     Stay in character. 
     Only act from your own perspective. 
@@ -152,7 +169,7 @@ class NPC(Actor):
         
 if __name__ == "__main__":
 
-    mick = NPC("Mick", "stoic, speaks only when necessary", "keep order in your bar, keep outlaws out NO OUTLAWS, will attack if they don't leave voluntarily", charisma=13, luck=5)
+    mick = NPC("Mick", "stoic, speaks only when necessary", "keep order in your bar, keep outlaws out NO OUTLAWS, will attack if they don't leave voluntarily", charisma=13, luck=9)
     robin = NPC("Robin", "grumpy, but with a good heart", "fight your headache, relax after a long day of work in the mines, stay in your bar stool", charisma=10, luck=8)
     franklin = NPC("Franklin", "anxious, quick to leave", "start a new life, get a new job, hide the fact you have a bounty the next planet over", charisma=9, intelligence=12, luck=7)
     maverick = NPC("Deadeye", "bold, with a bit too quick a trigger finger", "hunt bounties, make money", charisma=12, intelligence=11, luck=13)

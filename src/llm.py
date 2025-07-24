@@ -18,8 +18,8 @@ class LLM:
     By default, loads the model based on info from the "api.json" file in root.
 
     Args:
-        model (str): the name of the model to query - OPTIONAL
-        api_key (str): the key for the connection - OPTIONAL
+        model (Optional[str]): the name of the model to query
+        api_key (Optional[str]): the key for the connection
     """
     def __init__(self, model: str = None, api_key: str = None):
 
@@ -36,9 +36,13 @@ class LLM:
         self.model = api["model"]
 
     # TODO: not dict, but Response return
-    def prompt(self, message: dict | list[dict], json=False) -> dict:
+    def prompt(self, message: str | GPTMessage | list[GPTMessage], json=False) -> dict:
         """
         Prompts the LLM.
+
+        Args:
+            message (GPTMessage | list[GPTMessage]): context/message to send to LLM
+            json (bool): forces JSON output, default False
         """
         if json:
             response = self.client.responses.create(
