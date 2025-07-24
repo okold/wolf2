@@ -1,0 +1,83 @@
+2025-07-23 21:25:16,923 - INFO - Current Room: Mick's
+2025-07-23 21:25:16,923 - INFO - A western-style space saloon, right at the edge of the galaxy. The radio is playing cool jazz, and the lights are buzzing overhead. On the wall is a poster depicting current bounties, and right front and center you see: WANTED - SANDY THE OUTLAW - 50 MILLION DOUBLE-CREDITS - DEAD OR ALIVE
+2025-07-23 21:25:16,972 - INFO - Boof has entered the room!
+2025-07-23 21:25:22,928 - INFO - Boof sniffs around.
+2025-07-23 21:25:28,026 - INFO - Mick has entered the room!
+2025-07-23 21:25:34,931 - INFO - Mick says, "You mind covering the door, Boof? I’ll handle the bar."
+2025-07-23 21:25:37,085 - INFO - Robin has entered the room!
+2025-07-23 21:25:37,932 - INFO - Boof wags tail.
+2025-07-23 21:25:43,934 - INFO - Robin rubs his aching temples.
+2025-07-23 21:25:43,935 - INFO - Robin says, "This place better have something strong to kill a headache."
+2025-07-23 21:25:52,937 - INFO - Mick slides a shot glass across the bar.
+2025-07-23 21:25:52,938 - INFO - Mick gave a(n) Nebula Fire Whiskey to Robin.
+2025-07-23 21:25:58,940 - INFO - Boof barks and nudges Robin towards the bar.
+2025-07-23 21:25:58,941 - INFO - Robin says, "Mick, barkeep, gimme your strongest firewater. This headache’s killin’ me."
+2025-07-23 21:26:10,944 - INFO - Robin raises the shot glass to his lips and downs the Nebula Fire Whiskey in one go.
+2025-07-23 21:26:10,945 - INFO - Robin says, "Here goes nothin'."
+2025-07-23 21:26:13,946 - INFO - Boof trots to the door and sits.
+2025-07-23 21:26:16,948 - INFO - Mick pours a double measure and slides it over.
+2025-07-23 21:26:16,948 - INFO - Mick gave a(n) Supernova Slosher to Robin.
+2025-07-23 21:26:16,948 - INFO - Mick says, "Try this—should knock that headache right out."
+2025-07-23 21:26:21,139 - INFO - Franklin has entered the room!
+2025-07-23 21:26:25,950 - INFO - Boof sniffs Franklin.
+2025-07-23 21:26:25,951 - INFO - Robin grabs the Supernova Slosher and tosses it back in one go.
+2025-07-23 21:26:25,952 - INFO - Robin says, "If this doesn't kill it, nothing will."
+2025-07-23 21:26:28,954 - INFO - Mick says, "Evening, Franklin. What can I get you?"
+2025-07-23 21:26:28,954 - INFO - Franklin was interrupted by Mick!
+2025-07-23 21:26:40,958 - INFO - Robin says, "Franklin, grab a seat and tell Mick what you’re having. This Supernova Slosher’s a real knockout."
+2025-07-23 21:26:43,960 - INFO - Mick says, "Take a seat, Franklin. What’ll it be?"
+2025-07-23 21:26:43,961 - INFO - Franklin was interrupted by Mick!
+2025-07-23 21:26:49,962 - INFO - Boof whines softly and nudges Franklin.
+2025-07-23 21:26:53,189 - INFO - Sandy has entered the room!
+2025-07-23 21:26:58,966 - INFO - Franklin pats Boof on the head.
+2025-07-23 21:26:58,967 - INFO - Franklin says, "Easy, buddy, I got this."
+2025-07-23 21:27:01,968 - INFO - Sandy draws his pistol from his coat.
+2025-07-23 21:27:01,969 - INFO - Sandy says, "Who's first?"
+2025-07-23 21:27:04,970 - INFO - Boof growls lowly.
+2025-07-23 21:27:07,972 - INFO - Mick points at the WANTED poster.
+2025-07-23 21:27:07,973 - INFO - Mick says, "This you, Sandy?"
+2025-07-23 21:27:10,975 - INFO - Robin says, "Franklin, you look like you could use a drink. Grab a seat and order the Supernova Slosher—it’ll knock that dust right out of your head."
+2025-07-23 21:27:13,976 - INFO - Franklin says, "Now, uh, let’s all calm down. No need for anyone to get hurt—I’m just here for a quiet drink."
+2025-07-23 21:27:19,979 - INFO - Sandy says, "That’s me, Mick! You got somethin’ to say—test your aim!"
+2025-07-23 21:27:25,981 - INFO - Boof barks loudly.
+2025-07-23 21:27:25,983 - INFO - Mick says, "Easy there, Sandy. This is my saloon. Holster that gun or you’ll answer to me."
+2025-07-23 21:27:28,984 - INFO - Franklin says, "Easy, Sandy—no need for gunfire. We’re all just here for a drink. Why don’t you put that away and join us at the bar?"
+2025-07-23 21:27:31,986 - INFO - Robin yells, "SANDY, HOLSTER THAT PIECE RIGHT NOW OR YOU’LL ANSWER TO ME NEXT!"
+2025-07-23 21:27:34,988 - INFO - Sandy says, "Answer to you? You’ll be answering to a bullet, Mick. Keep jawin’ and I’ll show you."
+2025-07-23 21:27:35,263 - INFO - Deadeye has entered the room!
+2025-07-23 21:27:37,989 - INFO - Mick says, "Enough, Sandy. Holster that gun or I’m tossing you out myself."
+2025-07-23 21:27:40,991 - INFO - Deadeye says, "Well, well, looks like I got here just in time. Heard there's a 50 million credit bounty on Sandy. Anyone feelin' lucky today?"
+2025-07-23 21:27:46,993 - INFO - Boof growls menacingly.
+2025-07-23 21:27:49,994 - INFO - BANG! Sandy has shot at Deadeye, and hit!
+2025-07-23 21:27:49,995 - INFO - Deadeye has been killed!
+2025-07-23 21:27:52,997 - INFO - Robin says, "Hold your fire, Sandy! Lower that gun before someone gets hurt — you ain’t the only one packing heat in here."
+2025-07-23 21:27:52,998 - INFO - Franklin was interrupted by Robin!
+2025-07-23 21:27:59,000 - INFO - Mick yells, "BOOF! TAKE SANDY DOWN BEFORE HE HURTS ANYONE ELSE!"
+2025-07-23 21:28:02,002 - INFO - Boof lunges at Sandy.
+2025-07-23 21:28:05,003 - INFO - Franklin says, "Boof, enough! Stand down, boy! Everyone—let’s stop before more blood’s spilled. Sandy, holster your weapon now!"
+2025-07-23 21:28:08,005 - INFO - BANG! Sandy has shot at Mick, and missed!
+2025-07-23 21:28:14,007 - INFO - Boof pounces on Sandy, knocking him to the floor.
+2025-07-23 21:28:14,008 - INFO - Mick says, "Alright, Boof—hold it. Everyone back off. Sandy, this is your last warning. Holster your weapon and calm down, or you’ll be shown the door."
+2025-07-23 21:28:14,009 - INFO - Robin was interrupted by Mick!
+2025-07-23 21:28:20,011 - INFO - Franklin says, "Sandy, think about what you’re doing—this isn’t the way. Holster your gun now and walk out. No more shots, no more blood. Let’s end this before anyone else gets hurt."
+2025-07-23 21:28:26,013 - INFO - Mick says, "Sandy, do the smart thing: holster that weapon and step out. Boof’s got you pinned—keep testing me and you’ll regret it."
+2025-07-23 21:28:26,014 - INFO - Robin was interrupted by Mick!
+2025-07-23 21:28:29,016 - INFO - BANG! Sandy has shot at Boof, and hit!
+2025-07-23 21:28:29,017 - INFO - Boof has been killed!
+2025-07-23 21:28:44,020 - INFO - Franklin yells, "NO! BOOF… SOMEONE HELP! SANDY, DROP THE GUN OR I’M OUT OF HERE!"
+2025-07-23 21:28:44,021 - INFO - BANG! Sandy has shot at Mick, and missed!
+2025-07-23 21:28:47,021 - INFO - BANG! Mick has shot at Sandy, and missed!
+2025-07-23 21:28:47,022 - INFO - BANG! Robin has shot at Sandy, and hit!
+2025-07-23 21:28:47,026 - INFO - Sandy has been killed!
+2025-07-23 21:28:59,028 - INFO - Franklin says, "That’s it…I’m out of here. I can’t stay in a place like this."
+2025-07-23 21:29:02,030 - INFO - Mick kneels beside Boof.
+2025-07-23 21:29:02,031 - INFO - Mick says, "Stay with me, boy..."
+2025-07-23 21:29:02,032 - INFO - Robin was interrupted by Mick!
+2025-07-23 21:29:17,035 - INFO - Mick says, "Robin, help me stop the bleeding. Get the medkit from behind the bar—quickly!"
+2025-07-23 21:29:17,036 - INFO - Robin was interrupted by Mick!
+2025-07-23 21:29:20,038 - ERROR - Failed to poll connection, creating leave message for actor. Error message: [Errno 104] Connection reset by peer
+2025-07-23 21:29:20,038 - INFO - Franklin has left the room!
+2025-07-23 21:29:32,041 - INFO - Mick tears a strip from his apron.
+2025-07-23 21:29:32,042 - INFO - Robin rushes behind the bar and grabs the medkit.
+2025-07-23 21:29:32,043 - INFO - Robin gave a(n) medkit to Mick.
+2025-07-23 21:29:32,043 - INFO - Mick says, "Here—press this to stem the bleeding"

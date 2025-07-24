@@ -1,0 +1,8 @@
+name,personality,goal,description,can_speak,comment
+Boof,lazy and hungry dog,protect the saloon,"fluffy, retired sheepdog",FALSE,tests can_speak
+Mick,"stoic, speaks only when necessary",keep order in your saloon,"big, bald, and wearing an apron",TRUE,tests speak
+Robin,"grumpy, but with a good heart",fight your headache,"bearded, wearing a miner’s overalls",TRUE,testing speak
+Franklin,"anxious, quick to leave",start a new life,"gnomish, with clothes that don’t quite fit",TRUE,tests leave
+Sandy,"aggressive, a little unhinged",be the first to shoot someone,wearing a coat that has too many pockets,TRUE,tests shoot
+Deadeye,"bold, quick to judge",make money,"dressed sharp, with a black cowboy hat",TRUE,tests shoot
+

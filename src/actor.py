@@ -6,6 +6,7 @@ from typing import Optional
 
 ADDRESS = ("localhost", 6000)
 
+# TODO: update this...
 class ActorMessage(BaseModel):
     """
     Schema for messages sending Actor information over Connections
@@ -19,6 +20,7 @@ class ActorMessage(BaseModel):
         luck (Optional[int]): affects various things
     """
     name: str
+    description: str
     status: Optional[str]
     strength: Optional[int]
     intelligence: Optional[int]
@@ -34,19 +36,23 @@ class Actor(Process):
         name (str): the actor's name
         personality (str): a description of the actor's personality
         goal (str): a description of the actor's primary goal
+        description(Optional[str]): the actor's physical description
         status (Optional[str]): dead/alive status of the actor
         strength (Optional[int]): affects physical skill checks
         intelligence (Optional[int]): affects knowledge-based skill checks
         charisma (Optional[int]): affects speaking priority
         luck (Optional[int]): affects various things
+        can_speak (Optional[int]): default True
     """
-    def __init__(self, name, personality, goal, strength = 10, intelligence = 10, charisma = 10, luck = 10, status = "alive"):
+    def __init__(self, name, personality, goal, description = "The most generic person imaginable.", status = "alive", strength = 10, intelligence = 10, charisma = 10, luck = 10, can_speak = True):
         super().__init__()
 
         self.name = name
         self.personality = personality
         self.goal = goal
         self.status = status
+        self.description = description
+        self.can_speak = can_speak
 
         self.strength = strength # feats of physical prowess
         self.intelligence = intelligence # knowing things
@@ -66,6 +72,8 @@ class Actor(Process):
         """
         return {
             "name": self.name,
+            "description": self.description,
+            "can_speak": self.can_speak,
             "status": self.status,
             "strength": self.strength,
             "intelligence": self.intelligence,
@@ -79,6 +87,7 @@ class Actor(Process):
         """
         return {
             "name": self.name,
+            "description": self.description,
             "status": self.status
         }
 
@@ -89,8 +98,10 @@ class Actor(Process):
 
         desc = f"""--CHARACTER SHEET--
         Your name is: {self.name}
+        Your description is: {self.description}
         Your personality is: {self.personality}
         Your goal is: {self.goal}
+        Your character is capable of speech: {self.can_speak}
 
         STATS (10 is average): 
         Strength:       {self.strength}
@@ -104,7 +115,7 @@ class Actor(Process):
         """
 
         for actor in self.room_info["actors"]:
-            desc += f" - {actor}: status - {self.room_info['actors'][actor]['status']}"
+            desc += f" {actor}: {self.description} ({self.room_info['actors'][actor]['status']})"
 
         desc += "---"
 

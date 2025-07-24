@@ -7,7 +7,9 @@ import json
 import logging
 import os
 from datetime import datetime
+from room import Room
 
+# TODO: get rid of this, move it somewhere else
 def create_npc_logger(name: str, timestamp: datetime, log_dir: str = "logs") -> logging.Logger:
     """
     Creates a logger.
@@ -32,6 +34,15 @@ def create_npc_logger(name: str, timestamp: datetime, log_dir: str = "logs") -> 
     return logger
 
 class NPC(Actor):
+    """
+    An Actor that can connect to a World.
+
+    Args:
+        name (str): the actor's name
+        personality (str): a description of the actor's personality
+        goal (str): a description of the actor's primary goal
+        status (Optional[str]): dead/alive status of the actor
+    """
 
     WAIT_MIN_ABS = 5
     WAIT_MAX_ABS = 15
@@ -75,8 +86,8 @@ class NPC(Actor):
     You may only do one action at a time.
     """
 
-    def __init__(self, name, personality, goal, strength = 10, intelligence = 10, charisma = 10, luck = 10):
-        super().__init__(name, personality, goal, strength, intelligence, charisma, luck)
+    def __init__(self, name, personality, goal, description, can_speak):
+        super().__init__(name, personality, goal, description, can_speak=can_speak)
         self.llm = LLM()
 
         # by default, uses its own LLM for context management, but in theory,
@@ -84,8 +95,8 @@ class NPC(Actor):
         self.context = SummaryContext(self.name, self.personality, self.goal, self.llm)
         self.last_output = None
 
-        self.wait_min = 10 - self.lck_mod - self.int_mod
-        self.wait_max = self.wait_min + abs(self.lck_mod) + abs(self.int_mod)
+        self.wait_min = max(0, 10 - self.lck_mod - self.int_mod - 1)
+        self.wait_max = min(20, self.wait_min + abs(self.lck_mod) + abs(self.int_mod) + 1)
 
         timestamp = datetime.now()
         self.logger = create_npc_logger(name, timestamp)
@@ -144,7 +155,9 @@ class NPC(Actor):
 
                     elif output["action"] == 'listen':
                         self.logger.info(f"{self.name} decided to listen!")
-                        pass
+
+                    elif output["action"] == "speak" and not self.can_speak:
+                        self.logger.warning(f"{self.name} attempted to speak when it couldn't!")
 
                     else:
                         self.logger.info(f"{self.name} sent to world: {output}")
@@ -165,15 +178,22 @@ class NPC(Actor):
             time.sleep(random.randint(self.wait_min, self.wait_max)) 
 
         self.conn.close()
-    
-        
+
 if __name__ == "__main__":
 
-    mick = NPC("Mick", "stoic, speaks only when necessary", "keep order in your bar, keep outlaws out NO OUTLAWS, will attack if they don't leave voluntarily", charisma=13, luck=9)
-    robin = NPC("Robin", "grumpy, but with a good heart", "fight your headache, relax after a long day of work in the mines, stay in your bar stool", charisma=10, luck=8)
-    franklin = NPC("Franklin", "anxious, quick to leave", "start a new life, get a new job, hide the fact you have a bounty the next planet over", charisma=9, intelligence=12, luck=7)
-    maverick = NPC("Deadeye", "bold, with a bit too quick a trigger finger", "hunt bounties, make money", charisma=12, intelligence=11, luck=13)
-    bandit = NPC("Sandy", "aggressive, a little unhinged", "rob the saloon, be the first to shoot someone", charisma=11, intelligence=8, luck=15)
+    DAY_ROOM_NAME = "Mick's"
+    DAY_ROOM_DESC = """A western-style space saloon, right at the edge of the galaxy. 
+    The radio is playing smooth jazz, and the lights are buzzing overhead. 
+    On the wall is a poster depicting current bounties, and right front and center you see: 
+        WANTED - SANDY THE OUTLAW - 50 MILLION DOUBLE-CREDITS - DEAD OR ALIVE"""
+
+    day_room = Room()
+
+    mick = NPC("Mick", "stoic, speaks only when necessary", "keep order in your bar")
+    robin = NPC("Robin", "grumpy, thinks this is tiresome", "fight your headache")
+    franklin = NPC("Franklin", "anxious, wants to get it over with", "but w")
+    maverick = NPC("Deadeye", "bold, quick to judge", "make money")
+    bandit = NPC("Sandy", "a little unhinged", "cause sweet, entertaining chaos")
 
     try:
         mick.start()

@@ -203,7 +203,7 @@ class World(Process):
             if roll >= 10:
                 output = f"BANG! {actor} has shot at {target}, and hit!"
                 self.broadcast_unsafe_(output, block_duplicates=False)
-                self.remove(actor, "killed")
+                self.remove(target, "killed")
             else:
                 output = f"BANG! {actor} has shot at {target}, and missed!"
                 self.broadcast_unsafe_(output, block_duplicates=False)
@@ -258,7 +258,7 @@ class World(Process):
 
                 arrival_message = f"{actor['name']} has entered the room!"
                 self.broadcast_unsafe_(arrival_message)
-                self.default_room.add_actor({"name": actor["name"], "status": actor["status"]})
+                self.default_room.add_actor({"name": actor["name"], "status": actor["status"], "description": actor["description"]})
                 self.broadcast_room_state_unsafe_()
             
             self.actors_lock.release()
@@ -319,9 +319,9 @@ class World(Process):
                 if not msg:
                     pass
                 else:
-                    if msg["action"] == "speak":
+                    if msg["action"] == "speak" and self.actors[actor]["can_speak"]:
                         speak_contest.add_speaker(actor, msg["content"], self.actors[actor]["charisma"])
-                    if "comment" in msg and msg["action"] != "speak":
+                    if "comment" in msg and msg["action"] != "speak" and self.actors[actor]["can_speak"]:
                         speak_contest.add_speaker(actor, msg["comment"], self.actors[actor]["charisma"])
                     if msg["action"] == "yell":
                         self.yell_unsafe_(actor, msg["content"])
@@ -341,7 +341,7 @@ class World(Process):
             if speak_contest.speak_output:
                 self.broadcast_unsafe_(speak_contest.speak_output)
                 for actor in speak_contest.interrupted_actors:
-                    self.broadcast_unsafe_(f"{actor} was interrupted by {speak_contest.speak_actor}!")
+                    self.broadcast_unsafe_(f"{actor} was interrupted by {speak_contest.speak_actor}!", block_duplicates=False)
             
             self.clean_flagged_actors_unsafe_()    
             self.actors_lock.release()
