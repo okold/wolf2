@@ -47,6 +47,9 @@ class NPC(Actor):
     WAIT_MIN_ABS = 5
     WAIT_MAX_ABS = 15
 
+    WAIT_MIN = 3
+    WAIT_MAX = 5
+
     SYSTEM_MESSAGE = """You are an actor in a role-playing system that functions like a chat room.
         Your output must be valid JSON. Example:
         { "action": <action_name>, "content": <varies_by_action>, "target": <name>, "comment": <additional_dialogue> }
@@ -100,6 +103,8 @@ class NPC(Actor):
 
         timestamp = datetime.now()
         self.logger = create_npc_logger(name, timestamp)
+        self.is_awake = False
+        self.phase = "day"
 
     def run(self):
         self.connect()
@@ -114,27 +119,45 @@ class NPC(Actor):
                 while self.conn.poll():
                     msg = self.conn.recv()
 
-                    if msg["type"] == "context":
+                    if msg["type"] == "context" and self.is_awake:
                         self.context.append(msg["content"])
                         new_messages = True
                     elif msg["type"] == "room":
                         self.room_info = msg["content"]
+                        if msg["content"] == "Village Tavern":
+                            self.phase = "day"
+                        else:
+                            self.phase = "night"
+                        #elf.logger.info(f"received room_info: {msg['content']}")
+                        #elf.logger.info(self.room_info)
+                    elif msg["type"] == "role":
+                        self.role = msg["content"]
+                        self.logger.info(f"Received role: {self.role}")
+                    elif msg["type"] == "sleep":
+                        self.is_awake = False
+                        self.logger.info(f"Put to sleep!")
+                    elif msg["type"] == "wake":
+                        self.is_awake = True
+                        self.logger.info(f"Woken up!")
+                    elif msg["type"] == "vote_targets":
+                        self.vote_targets = msg["content"]
+                        self.logger.info(f"Received vote targets: {self.vote_targets}")
 
                     self.logger.info(f"{self.name} received world message: {msg}")
 
             except EOFError:
                 break
 
-            if new_messages or quiet_round_passed:
+            if self.is_awake and (new_messages or quiet_round_passed):
                 prompt = [
-                    {"role": "developer", "content": NPC.SYSTEM_MESSAGE + "\n" + self.character_sheet() + "\n" + self.context.summary}
+                    {"role": "developer", "content": self.SYSTEM_MESSAGE + "\n" + self.character_sheet() + "\n" + self.context.summary}
                 ] + self.context.context
 
                 self.logger.info(f"{self.name} sending to LLM. Prompt:\n{prompt}")
                 response = self.llm.prompt(prompt, json=True)
                 output = response.output_text
                 
-                self.logger.info(f"{self.name} received LLM response:\n{response.output}")
+                self.logger.info(f"{self.name} received LLM response:\n{response.output_text}")
 
                 try:
                     output = json.loads(output)
@@ -156,6 +179,7 @@ class NPC(Actor):
                         self.logger.warning(f"{self.name} attempted to speak when it couldn't!")
 
                     else:
+                        output["room"] = self.room_info["name"]
                         self.logger.info(f"{self.name} sent to world: {output}")
                         self.conn.send(output)
                         
@@ -166,12 +190,12 @@ class NPC(Actor):
                 quiet_round_passed = False
             
             else:
-                self.context.append({"role": "developer", "content": "It's quiet."})
-                self.logger.info("Added quiet message to context.")
+                #self.context.append({"role": "developer", "content": "It's quiet."})
+                #self.logger.info("Added quiet message to context.")
                 quiet_round_passed = True
 
             # to keep things from going too fast
-            time.sleep(random.randint(self.wait_min, self.wait_max)) 
+            time.sleep(random.randint(self.WAIT_MIN, self.WAIT_MAX)) 
 
         self.conn.close()
 

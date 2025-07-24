@@ -54,6 +54,7 @@ class Actor(Process):
         self.description = description
         self.can_speak = can_speak
         self.gender = gender
+        self.role = "NPC"
 
         self.strength = strength # feats of physical prowess
         self.intelligence = intelligence # knowing things
@@ -115,7 +116,7 @@ class Actor(Process):
 
         You are currently in a room named: {self.room_info['name']}
         {self.room_info['description']}
-        
+
         The people in the room are:
         """
 

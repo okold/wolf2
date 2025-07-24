@@ -38,6 +38,9 @@ class Context(ABC):
         if self.logger:
             self.logger.info(message)
 
+    def clear(self):
+        self.context = []
+
     def trim(self):
         """
         Trims the context, keeping context_keep messagess
