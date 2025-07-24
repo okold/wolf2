@@ -1,5 +1,4 @@
-
-from multiprocessing import Process, Pipe
+from multiprocessing.connection import Listener, Pipe, Connection
 import random
 import time
 import sys
@@ -9,9 +8,21 @@ import csv
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 from npc import NPC
 from world import World
+from room import Room
 from llm import LLM
 
 NPCS_PATH = "npcs.csv"
+
+class WolfWorld(World):
+    def __init__(self, llm: LLM = None, cli: Connection = None):
+        super().__init__(llm, cli)
+
+        day_room = Room("Village Tavern", "The village's official meeting place.")
+        night_room = Room("Hideout", "A cave on the outskirts of the village.")
+
+        self.default_room = day_room
+        self.rooms = {day_room.name: day_room, night_room.name: night_room}
+
 
 
 if __name__ == "__main__":
@@ -25,7 +36,7 @@ if __name__ == "__main__":
 
     # create and start server
     parent_conn, child_conn = Pipe()
-    world = World(LLM(), child_conn)
+    world = WolfWorld(LLM(), child_conn)
     world.start()
 
     print("Spawning bots...")

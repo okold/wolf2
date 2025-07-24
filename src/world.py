@@ -100,13 +100,17 @@ class World(Process):
                     
             self.broadcast({"role": "user", "content": arrival_message})
             self.broadcast(self.default_room.state(), "room")
+            time.sleep(5)
 
     def print_info(self, message: str):
         """
         Prints to the console and log (info)
         """
         self.logger.info(message)
-        print(message)
+        try:
+            print(message["content"])
+        except:
+            pass
 
     # safely attempts a recv from the provided connection
     def try_recv(self, conn: Connection) -> ActionMessage:
@@ -151,7 +155,7 @@ class World(Process):
     def send_to_room(self, room: str, message: dict, type = "context"):
         with self.rooms_lock:
             try:
-                for actor in self.rooms[room]["actors"]:
+                for actor in self.rooms[room].actors:
                     self.send_to_actor(actor, message, type)
                 self.print_info(message)
             except Exception as e:
@@ -302,7 +306,6 @@ class World(Process):
                         new_messages.append(msg)
 
             for msg in new_messages:
-                print(f"MESSAGE: {msg}")
                 if msg["action"] == "speak" and self.actors[msg["actor"]]["can_speak"]:
                     speak_contest.add_speaker(msg["actor"], msg["content"], self.actors[msg["actor"]]["charisma"])
                 if "comment" in msg and msg["action"] != "speak" and self.actors[msg["actor"]]["can_speak"]:
