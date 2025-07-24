@@ -86,8 +86,8 @@ class NPC(Actor):
     You may only do one action at a time.
     """
 
-    def __init__(self, name, personality, goal, description, can_speak):
-        super().__init__(name, personality, goal, description, can_speak=can_speak)
+    def __init__(self, name, personality, goal, description, can_speak, gender):
+        super().__init__(name, personality, goal, description, can_speak=can_speak, gender=gender)
         self.llm = LLM()
 
         # by default, uses its own LLM for context management, but in theory,

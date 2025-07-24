@@ -44,7 +44,7 @@ class Actor(Process):
         luck (Optional[int]): affects various things
         can_speak (Optional[int]): default True
     """
-    def __init__(self, name, personality, goal, description = "The most generic person imaginable.", status = "alive", strength = 10, intelligence = 10, charisma = 10, luck = 10, can_speak = True):
+    def __init__(self, name, personality, goal, description = "The most generic person imaginable.", status = "alive", strength = 10, intelligence = 10, charisma = 10, luck = 10, can_speak = True, gender= "indeterminate"):
         super().__init__()
 
         self.name = name
@@ -53,6 +53,7 @@ class Actor(Process):
         self.status = status
         self.description = description
         self.can_speak = can_speak
+        self.gender = gender
 
         self.strength = strength # feats of physical prowess
         self.intelligence = intelligence # knowing things
@@ -74,6 +75,7 @@ class Actor(Process):
             "name": self.name,
             "description": self.description,
             "can_speak": self.can_speak,
+            "gender": self.gender,
             "status": self.status,
             "strength": self.strength,
             "intelligence": self.intelligence,
@@ -88,6 +90,7 @@ class Actor(Process):
         return {
             "name": self.name,
             "description": self.description,
+            "gender": self.gender,
             "status": self.status
         }
 
@@ -97,11 +100,12 @@ class Actor(Process):
         """
 
         desc = f"""--CHARACTER SHEET--
-        Your name is: {self.name}
-        Your description is: {self.description}
-        Your personality is: {self.personality}
-        Your goal is: {self.goal}
-        Your character is capable of speech: {self.can_speak}
+        Name: {self.name}
+        Description: {self.description}
+        Personality: {self.personality}
+        Goal: {self.goal}
+        Gender: {self.gender}
+        Speech Capability: {self.can_speak}
 
         STATS (10 is average): 
         Strength:       {self.strength}
@@ -110,7 +114,8 @@ class Actor(Process):
         Luck:           {self.luck}
 
         You are currently in a room named: {self.room_info['name']}
-        The room's description is: {self.room_info['description']}
+        {self.room_info['description']}
+        
         The people in the room are:
         """
 

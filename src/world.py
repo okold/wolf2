@@ -256,9 +256,9 @@ class World(Process):
                 actor["conn"] = conn
                 conn.send(self.default_room.dict())
 
-                arrival_message = f"{actor['name']} has entered the room!"
+                arrival_message = f"{actor['name']} has entered the room! Description: {actor['description']}"
                 self.broadcast_unsafe_(arrival_message)
-                self.default_room.add_actor({"name": actor["name"], "status": actor["status"], "description": actor["description"]})
+                self.default_room.add_actor({"name": actor["name"], "status": actor["status"], "description": actor["description"], "gender": actor["gender"]})
                 self.broadcast_room_state_unsafe_()
             
             self.actors_lock.release()

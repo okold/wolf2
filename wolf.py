@@ -37,7 +37,7 @@ if __name__ == "__main__":
         else:
             npc["can_speak"] = False
 
-        bot_player= NPC(npc["name"], npc["personality"], npc["goal"], npc["description"], npc["can_speak"])
+        bot_player= NPC(npc["name"], npc["personality"], npc["goal"], npc["description"], npc["can_speak"], npc["gender"])
         bot_player.start()
         player_list.append(bot_player)
 
