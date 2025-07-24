@@ -4,11 +4,12 @@ from multiprocessing.connection import Listener, Pipe, Connection
 import time
 from room import Room
 import random
-from llm import LLM, GPTMessage
+from llm import LLM
 from datetime import datetime
 from npc import create_npc_logger
 from typing import Optional
 from pydantic import BaseModel
+from speech import SpeakingContest
 
 ADDRESS = ("localhost", 6000) #TODO: something about this
 
@@ -63,11 +64,42 @@ class World(Process):
 
         timestamp = datetime.now()
 
+        self.rooms_lock = Lock()
+        self.rooms = {self.default_room.name: self.default_room}
+
         # TODO: change this. this is bad. it works.
         self.logger = create_npc_logger("World", timestamp)
 
         self.print_info(f"Current Room: {self.default_room.name}")
         self.print_info(self.default_room.description)
+
+    def new_connection_loop(self):
+        """
+        Adds new actors to the list. Upon connection, the next message from the actor must be its name.
+        
+        Duplicate names are not allowed.
+        """
+        while True:
+            conn = self.listener.accept()
+
+            with self.actors_lock, self.rooms_lock:
+                actor = conn.recv()
+
+                if actor["name"] in self.actors:
+                    conn.close() # TODO: error response for retries
+
+                else:
+                    self.actors[actor["name"]] = actor
+                    actor["conn"] = conn
+                    actor["room"] = self.default_room.name
+                    conn.send(self.default_room.state())
+
+                    arrival_message = f"{actor['name']} has entered the room! Description: {actor['description']}"
+                    
+                    self.default_room.add_actor({"name": actor["name"], "status": actor["status"], "description": actor["description"], "gender": actor["gender"]})
+                    
+            self.broadcast({"role": "user", "content": arrival_message})
+            self.broadcast(self.default_room.state(), "room")
 
     def print_info(self, message: str):
         """
@@ -96,8 +128,7 @@ class World(Process):
             self.logger.error(f"Failed to poll connection, creating leave message for actor. Error message: {e}")
             return {"action": "leave", "reason": "disconnect"}
     
-    # NOTE: this is NOT THREAD SAFE, and is intended to be called already within a lock
-    def send_to_actor_unsafe_(self, actor : str, message: GPTMessage, type = "context"):
+    def send_to_actor(self, actor : str, message: dict, type = "context"):
         """
         Attempts to send a message to the designated Actor
 
@@ -107,42 +138,32 @@ class World(Process):
             type (str): determines the function the Actor should call - OPTIONAL
         """
         try:
-            self.actors[actor]["conn"].send({"type": type, "content": message})
+            with self.actors_lock:
+                self.actors[actor]["conn"].send({"type": type, "content": message})
         except Exception as e:
-            self.logger.error(f"Failed to send message to {actor}: {e}")
+            self.logger.error(f"Failed to send message to actor {actor}: {e}")
 
-    # NOTE: this is NOT THREAD SAFE, and is intended to be called already within a lock
-    def broadcast_unsafe_(self, content: str, role = "user", exclude_actors: list[str] = [], block_duplicates = True):
-        """
-        Sends a string to every Actor connected to the world.
-
-        Args:
-            content (str): the string to send to the Actors
-            role (str): the role for the resulting GPTMessage, default "user"
-            exclude_actors (list[str]): actors to exclude from the broadcast - OPTIONAL
-            block_duplicates (bool): will refuse to send the same message twice if True - OPTIONAL
-        """
-
-        if content not in self.broadcast_log or not block_duplicates:
-            self.print_info(content)
-            if block_duplicates:
-                self.broadcast_log.append(content)
-            for actor in self.actors:
-                if actor not in exclude_actors:
-                    self.send_to_actor_unsafe_(actor, {"role": role, "content": content})
-        else:
-            self.logger.warning(f"Blocked duplicate broadcast: {content}")
-
-    # NOTE: this is NOT THREAD SAFE, and is intended to be called already within a lock
-    def broadcast_room_state_unsafe_(self):
-        """
-        Broadcasts the room state to all actors connected to the server.
-        """
+    def broadcast(self, message: dict, type = "context"):
         for actor in self.actors:
-            self.actors[actor]["conn"].send({"type": "room", "content": self.default_room.dict()})
+            self.send_to_actor(actor, message, type)
+        self.print_info(message)
+
+    def send_to_room(self, room: str, message: dict, type = "context"):
+        with self.rooms_lock:
+            try:
+                for actor in self.rooms[room]["actors"]:
+                    self.send_to_actor(actor, message, type)
+                self.print_info(message)
+            except Exception as e:
+                self.logger.error(f"Failed to send message to room {room}: {e}")
+
+    def move_actor_to_room(self, actor: str, room: str):
+        with self.rooms_lock, self.actors_lock:
+            if room in self.rooms and actor in self.actors:
+                    self.actors["room"] = room
 
     # NOTE: this is NOT THREAD SAFE, and is intended to be called already within a lock
-    def yell_unsafe_(self, actor: str, content: str):
+    def yell(self, actor: str, content: str):
         """
         Broadcasts a message to everyone in the format:
 
@@ -153,11 +174,11 @@ class World(Process):
             content (str): the message they're yelling
         """
         output = f"{actor} yells, \"{content.upper()}\""
-        self.broadcast_unsafe_(output)
+        self.send_to_room(self.actors[actor]["room"], {"role": "user", "content": output})
 
     # NOTE: this is NOT THREAD SAFE, and is intended to be called already within a lock
     # TODO: an ACTUAL inventory system. for now, it's just pretend.
-    def give_unsafe_(self, actor: str, content: str, target: str):
+    def give(self, actor: str, content: str, target: str):
         """
         Broadcasts than an actor has given an item to a target, in for format:
 
@@ -170,7 +191,7 @@ class World(Process):
         """
         if actor != target: #prevents people from giving themselves things
             output = f"{actor} gave a(n) {content} to {target}."
-            self.broadcast_unsafe_(output)
+            self.send_to_room(self.actors[actor]["room"], {"role": "user", "content": output})
         else:
             self.logger.warning(f"Blocked {actor} from giving themselves something." )
 
@@ -189,7 +210,7 @@ class World(Process):
         self.flagged_actors.append((actor, reason))
 
     # NOTE: this is NOT THREAD SAFE, and is intended to be called already within a lock
-    def shoot_unsafe_(self, actor: str, target: str):
+    def shoot(self, actor: str, target: str):
         """
         Lets the given actor try to shoot the target. 50% chance of success.
 
@@ -202,16 +223,16 @@ class World(Process):
 
             if roll >= 10:
                 output = f"BANG! {actor} has shot at {target}, and hit!"
-                self.broadcast_unsafe_(output, block_duplicates=False)
+                self.send_to_room(self.actors[actor]["room"], {"role": "user", "content": output})
                 self.remove(target, "killed")
             else:
                 output = f"BANG! {actor} has shot at {target}, and missed!"
-                self.broadcast_unsafe_(output, block_duplicates=False)
+                self.send_to_room(self.actors[actor]["room"], {"role": "user", "content": output})
             
         except Exception as e:
             self.logger.warning(e)
 
-    def clean_flagged_actors_unsafe_(self):
+    def clean_flagged_actors(self):
         """
         Removes all actors in the flagged_actors list.
         """
@@ -228,42 +249,18 @@ class World(Process):
                         output = f"{actor[0]} has left the room!"
                         self.default_room.remove_actor(actor[0])
 
-                    self.broadcast_unsafe_(output)
+                    self.send_to_room(self.actors[actor]["room"], {"role": "user", "content": output})
                 except Exception as e:
                     self.logger.warning(e)
 
-            self.broadcast_room_state_unsafe_()
+            for room in self.rooms:
+                self.send_to_room(room, self.rooms[room].state(), "room")
+
             self.flagged_actors = []
 
-    def new_connection_loop(self):
-        """
-        Adds new actors to the list. Upon connection, the next message from the actor must be its name.
-        
-        Duplicate names are not allowed.
-        """
-        while True:
-            conn = self.listener.accept()
+    
 
-            self.actors_lock.acquire()
-
-            actor = conn.recv()
-
-            if actor["name"] in self.actors:
-                conn.close() # TODO: error response for retries
-
-            else:
-                self.actors[actor["name"]] = actor
-                actor["conn"] = conn
-                conn.send(self.default_room.dict())
-
-                arrival_message = f"{actor['name']} has entered the room! Description: {actor['description']}"
-                self.broadcast_unsafe_(arrival_message)
-                self.default_room.add_actor({"name": actor["name"], "status": actor["status"], "description": actor["description"], "gender": actor["gender"]})
-                self.broadcast_room_state_unsafe_()
-            
-            self.actors_lock.release()
-
-    def gesture_unsafe_(self, actor: str, content: str):
+    def gesture(self, actor: str, content: str):
         """
         Allows an actor to gesture in the format:
 
@@ -275,27 +272,7 @@ class World(Process):
             actor (str): the name of the actor acting
             content (str): the gesture being performed
         """
-
-        self.broadcast_unsafe_(f"{actor} {content}.")
-
-    class SpeakingContest():
-        def __init__(self):
-            self.max_cha = 0
-            self.speak_output = None
-            self.speak_actor = None
-            self.interrupted_actors = []
-
-        def add_speaker(self, actor, speech, charisma):
-            if charisma > self.max_cha:
-                self.speak_output = f"{actor} says, \"{speech}\""
-                self.max_cha = charisma
-
-                if self.speak_actor != None:
-                    self.interrupted_actors.append(self.speak_actor)
-
-                self.speak_actor = actor
-            else:
-                self.interrupted_actors.append(actor)
+        self.send_to_room(self.actors[actor]["room"], {"role": "user", "content": f"{actor} {content}."})
 
     def run(self):
         connection_loop = Thread(target=self.new_connection_loop, daemon=True)
@@ -305,49 +282,55 @@ class World(Process):
         while True:
 
             # logic for who gets to successfully speak this round
-            speak_contest = self.SpeakingContest()
+            speak_contest = SpeakingContest()
 
             # check for cli messages
             msg = self.try_recv(self.cli)
             if msg == "quit" or msg == "exit":
                 break
 
+            new_messages = []
+
             # check each actor for messages & forward
-            self.actors_lock.acquire()
-            for actor in self.actors:
-                msg = self.try_recv(self.actors[actor]["conn"])
-                if not msg:
-                    pass
-                else:
-                    if msg["action"] == "speak" and self.actors[actor]["can_speak"]:
-                        speak_contest.add_speaker(actor, msg["content"], self.actors[actor]["charisma"])
-                    if "comment" in msg and msg["action"] != "speak" and self.actors[actor]["can_speak"]:
-                        speak_contest.add_speaker(actor, msg["comment"], self.actors[actor]["charisma"])
-                    if msg["action"] == "yell":
-                        self.yell_unsafe_(actor, msg["content"])
-                    if msg["action"] == "gesture":
-                        self.gesture_unsafe_(actor, msg["content"])
-                    if "gesture" in msg and msg["action"] != "gesture":
-                        self.gesture_unsafe_(actor, msg["gesture"])
-                    if msg["action"] == "give":
-                        self.give_unsafe_(actor, msg["content"], msg["target"])
-                    if msg["action"] == "leave":
-                        self.remove(actor)
-                    if msg["action"] == "shoot":
-                        self.shoot_unsafe_(actor, msg["target"])
+            with self.actors_lock:
+                for actor in self.actors:
+                    msg = self.try_recv(self.actors[actor]["conn"])
+                    if not msg:
+                        pass
+                    else:
+                        msg["actor"] = actor
+                        new_messages.append(msg)
+
+            for msg in new_messages:
+                print(f"MESSAGE: {msg}")
+                if msg["action"] == "speak" and self.actors[msg["actor"]]["can_speak"]:
+                    speak_contest.add_speaker(msg["actor"], msg["content"], self.actors[msg["actor"]]["charisma"])
+                if "comment" in msg and msg["action"] != "speak" and self.actors[msg["actor"]]["can_speak"]:
+                    speak_contest.add_speaker(msg["actor"], msg["comment"], self.actors[msg["actor"]]["charisma"])
+                if msg["action"] == "yell":
+                    self.yell(msg["actor"], msg["content"])
+                if msg["action"] == "gesture":
+                    self.gesture(msg["actor"], msg["content"])
+                if "gesture" in msg and msg["action"] != "gesture":
+                    self.gesture(msg["actor"], msg["gesture"])
+                if msg["action"] == "give":
+                    self.give(msg["actor"], msg["content"], msg["target"])
+                if msg["action"] == "leave":
+                    self.remove(msg["actor"])
+                if msg["action"] == "shoot":
+                    self.shoot(msg["actor"], msg["target"])
 
             # outputs speak messages
             # TODO: figure this out better
             if speak_contest.speak_output:
-                self.broadcast_unsafe_(speak_contest.speak_output)
+                self.send_to_room(self.actors[speak_contest.speak_actor]["room"], speak_contest.speak_output)
                 for actor in speak_contest.interrupted_actors:
-                    self.broadcast_unsafe_(f"{actor} was interrupted by {speak_contest.speak_actor}!", block_duplicates=False)
+                    self.send_to_room(self.actors[speak_contest.speak_actor]["room"], {"role": "user", "content": f"{actor} was interrupted by {speak_contest.speak_actor}!"})
             
-            self.clean_flagged_actors_unsafe_()    
-            self.actors_lock.release()
+            self.clean_flagged_actors()    
             
             time.sleep(World.WAIT_TIME)
-
+    
 if __name__ == "__main__":
     parent_conn, child_conn = Pipe()
     world = World(LLM(), child_conn)

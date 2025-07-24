@@ -130,10 +130,6 @@ class NPC(Actor):
                     {"role": "developer", "content": NPC.SYSTEM_MESSAGE + "\n" + self.character_sheet() + "\n" + self.context.summary}
                 ] + self.context.context
 
-                if self.context.context == []:
-                    prompt.append(
-                        {"role": "developer", "content": "No messages! Say hello!"}
-                    )
                 self.logger.info(f"{self.name} sending to LLM. Prompt:\n{prompt}")
                 response = self.llm.prompt(prompt, json=True)
                 output = response.output_text

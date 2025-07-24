@@ -41,7 +41,7 @@ if __name__ == "__main__":
         bot_player.start()
         player_list.append(bot_player)
 
-        time.sleep(random.randint(5,60))
+        #time.sleep(random.randint(5,60))
 
 
 
