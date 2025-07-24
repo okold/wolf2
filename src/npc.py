@@ -58,8 +58,8 @@ class NPC(Actor):
     You may only do one action at a time.
     """
 
-    def __init__(self, name, personality, goal, str = 10, int = 10, cha = 10, lck = 10):
-        super().__init__(name, personality, goal, str, int, cha, lck)
+    def __init__(self, name, personality, goal, strength = 10, intelligence = 10, charisma = 10, luck = 10):
+        super().__init__(name, personality, goal, strength, intelligence, charisma, luck)
         self.llm = LLM()
 
         # by default, uses its own LLM for context management, but in theory,
@@ -152,11 +152,11 @@ class NPC(Actor):
         
 if __name__ == "__main__":
 
-    mick = NPC("Mick", "stoic, speaks only when necessary", "keep order in your bar, keep outlaws out NO OUTLAWS, will attack if they don't leave voluntarily", cha=13, lck=5)
-    robin = NPC("Robin", "grumpy, but with a good heart", "fight your headache, relax after a long day of work in the mines, stay in your bar stool", cha=10, lck=8)
-    franklin = NPC("Franklin", "anxious, quick to leave", "start a new life, get a new job, hide the fact you have a bounty the next planet over", cha=9, int=12, lck=7)
-    maverick = NPC("Deadeye", "bold, with a bit too quick a trigger finger", "hunt bounties, make money", cha=12, int=11, lck=13)
-    bandit = NPC("Sandy", "aggressive, a little unhinged", "rob the saloon, be the first to shoot someone", cha=11, int=8, lck=15)
+    mick = NPC("Mick", "stoic, speaks only when necessary", "keep order in your bar, keep outlaws out NO OUTLAWS, will attack if they don't leave voluntarily", charisma=13, luck=5)
+    robin = NPC("Robin", "grumpy, but with a good heart", "fight your headache, relax after a long day of work in the mines, stay in your bar stool", charisma=10, luck=8)
+    franklin = NPC("Franklin", "anxious, quick to leave", "start a new life, get a new job, hide the fact you have a bounty the next planet over", charisma=9, intelligence=12, luck=7)
+    maverick = NPC("Deadeye", "bold, with a bit too quick a trigger finger", "hunt bounties, make money", charisma=12, intelligence=11, luck=13)
+    bandit = NPC("Sandy", "aggressive, a little unhinged", "rob the saloon, be the first to shoot someone", charisma=11, intelligence=8, luck=15)
 
     try:
         mick.start()
