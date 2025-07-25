@@ -149,32 +149,40 @@ class WolfWorld(World):
             if speak_output and speak_contest.room == self.current_room.name:
                 room = self.actors[speak_actor]["room"]
                 self.send_to_room(room, speak_output)
-                for actor in interrupted_actors:
-                    self.send_to_room(self.actors[speak_actor]["room"], {"role": "user", "content": f"{actor} was interrupted by {speak_actor}!"})
+                #for actor in interrupted_actors:
+                #    self.send_to_room(self.actors[speak_actor]["room"], {"role": "user", "content": f"{actor} was interrupted by {speak_actor}!"})
 
             vote_result = resolve_majority_vote(self.votes)
 
             if vote_result:
                 self.remove(vote_result, "killed")
-                self.send_to_room(self.current_room.name, {"role": "system", "content": f"{vote_result} has been killed! Role: {self.actors[vote_result]['role']}. The game has moved to the {self.phase} phase."})
+                self.send_to_room(self.current_room.name, {"role": "system", "content": f"{vote_result} has been killed! Role: {self.actors[vote_result]['role']}."})
 
                 if self.phase == "night":
                     self.phase = "day"
                     self.current_room = self.day_room
-                    self.print_info("Moved to Day phase!")
+                    
                 else:
                     self.phase = "night"
                     self.current_room = self.night_room
                     self.print_info("Moved to Night phase!")
 
-                for actor in self.actors:
-                    self.send_sleep_message(actor)
+                self.send_to_room(self.current_room.name, f"It is now the {self.phase} phase!")
 
-                    if self.phase == "day":
-                        self.move_actor_to_room(actor, self.day_room.name)
-                    elif self.phase == "night" and self.actors[actor]["role"] == "werewolf":
-                        self.move_actor_to_room(actor, self.night_room.name)
-                
+                for actor in self.actors:
+                    if self.actors[actor]["status"] == "alive":
+                        try:
+                            self.send_sleep_message(actor)
+                            self.send_phase_message(actor, self.phase)
+                            self.send_summary_message(actor)
+
+                            if self.phase == "day":
+                                self.move_actor_to_room(actor, self.day_room.name)
+                            elif self.phase == "night" and self.actors[actor]["role"] == "werewolf":
+                                self.move_actor_to_room(actor, self.night_room.name)
+                        except Exception as e:
+                            self.logger.exception(e)
+                    
                 self.reset_votes()
                 self.awaken_room(self.current_room.name)
 
@@ -187,14 +195,40 @@ class WolfWorld(World):
 
 class WolfNPC(NPC):
 
+    SYSTEM_MESSAGE_GEN = """You are an actor in a game of Werewolf. Stay in character and try to win according to your role.
+
+PHASES:
+- NIGHT (2 min or until vote passes): Only werewolves act. They vote on a target to kill.
+- DAY (5 min or until vote passes): All players act. Everyone votes on someone to lynch.
+At the end of each phase, the killed player's role is revealed.
+
+ROLES:
+- WEREWOLF: Coordinate quietly at night. Blend in during the day. Don't reveal your role. Push suspicion subtly.
+- VILLAGER: Use conversation to identify and vote out werewolves. Trust cautiously.
+
+VICTORY:
+- Werewolves win if all villagers are dead.
+- Villagers win if all werewolves are dead.
+
+Your output must be valid JSON with ONE action per message.
+Examples:
+{ "action": "speak", "content": "I don’t trust Elda." }
+{ "action": "gesture", "content": "shrugs", "comment": "Could be anyone." }
+{ "action": "vote", "target": "Boof" }
+{ "action": "listen" }
+
+Available actions: speak, gesture, yell, listen, vote.
+
+Only act from your perspective. Don’t repeat yourself. Move the conversation forward."""
+
     SYSTEM_MESSAGE = """You are an actor in a game of Werewolf. The rules of the game are:
         - During the night phase, only werewolf players are active.
-        The night phase lasts until the werewolves have majority voted on a target to kill.
-        At the end of the night phase, the killed player is announced to all players.
+        The night phase lasts for two minutes, or until a vote has passed.
 
         - During the day phase, every player votes on who to lynch.
-        The day phase lasts until everyone has majority voted on a target to kill.
-        At the end of the day phase, the role of the lynched player is revealed.
+        The day phase lasts for five minutes, or until a vote has passed.
+        
+    At the end of the current phase, the role of the killed player is revealed.
 
     The werewolves win if all villagers have been killed.
     The villagers win if the werewolves have been killed.
@@ -232,13 +266,12 @@ class WolfNPC(NPC):
         """
 
         desc = f"""--CHARACTER SHEET--
-        Name: {self.name}
-        Role: {self.role}
-        Phase: {self.phase}
-        Description: {self.description}
-        Personality: {self.personality}
-        Gender: {self.gender}
-        Speech Capability: {self.can_speak}
+        Your name: {self.name}
+        Your role is: {self.role}
+        Game phase: {self.phase}
+        Your personality: {self.personality}
+        Your gender: {self.gender}
+        Your speech Capability: {self.can_speak}
 
         You are currently in a room named: {self.room_info['name']}
         {self.room_info['description']}
@@ -255,6 +288,15 @@ class WolfNPC(NPC):
         """
 
         return desc
+    
+    def update_summary_message(self, new_message : str):
+        new_message = f"""Update your long-term memory by summarizing and integrating your short-term memory.
+        Keep your summary in first person.
+        You are playing a game of werewolf, and your role is: {self.role}.
+        The current phase of the game is: {self.phase}
+        Remember your allies and keep in mind any strategies for proceeding.
+        """
+        return super().update_summary_message(new_message)
 
 if __name__ == "__main__":
 

@@ -1,7 +1,7 @@
-name,personality,goal,description,can_speak,gender,comment
-Boof,lazy and hungry dog,protect the saloon,"fluffy, retired sheepdog",FALSE,female,tests can_speak
-Mick,"stoic, speaks only when necessary",keep order in your saloon,"big, bald, and wearing an apron",TRUE,male,tests speak
-Robin,"grumpy, but with a good heart",fight your headache,wearing a miner’s overalls,TRUE,female,testing speak
-Franklin,"anxious, quick to leave",start a new life,"gnomish, with clothes that don’t quite fit",TRUE,male,tests leave
-Sandy,"aggressive, a little unhinged",be the first to shoot someone,"sand-coloured lizard-alien, wearing a coat that has too many pockets",TRUE,female,tests shoot
-Deadeye,"bold, quick to judge",make money,"dressed sharp, with a black cowboy hat",TRUE,male,tests shoot
+name,personality,goal,description,can_speak,gender
+Boof,lazy and hungry dog,protect the village,"fluffy, retired sheepdog",FALSE,female
+Marla,stern but fair,uphold village law,older woman with a long coat and a wooden badge pinned to her lapel,TRUE,female
+Jori,anxious and eager,prove he’s trustworthy,"tall and thin, with oversized glasses and a constantly twitching foot",TRUE,male
+Thatch,boisterous and loud,entertain the crowd,barrel-chested bard with a lute strapped across his back,TRUE,male
+Nibbin,shy and skittish,avoid conflict,"teen in a patched cloak, always half-hidden in the shadows",FALSE,nonbinary
+Elda,aloof and cryptic,uncover ancient secrets,"draped in layers of dusty silk, speaks in riddles when she speaks at all",TRUE,female

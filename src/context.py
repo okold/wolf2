@@ -90,37 +90,25 @@ class SummaryContext(Context):
                  context_keep=Context.DEFAULT_KEEP, 
                  context=[], 
                  summary="", 
-                 logger = None):
+                 logger = None,
+                 summary_message = "Update your long-term memory by summarizing your short-term memory, while keeping your last summary within your long-term memory in mind. Keep your summary in first-person."):
         super().__init__(llm, context_limit, context_keep, context, summary, logger)
         self.name = name
         self.personality = personality
         self.goal = goal
+        self.summary_message = summary_message
 
     def summarize(self):
         """
         Summarizes the context using the LLM.
         """
-        summary_message = [{"role": "developer", "content": f"""You are {self.name}.
-        Your personality is: {self.personality}
-        Your primary goal is: {self.goal}
+    
+        long_term_memory = [{"role": "developer", "content": ""}]
 
-        Your long-term memory is:
-        {self.summary}
-
-        Your short-term memory will follow as a sequence of messages."""}]
-
-        prompt = summary_message + self.context + [{"role": "developer", "content":
-            """Update your long-term memory by summarizing your short-term memory, while keeping your last summary within your long-term memory in mind. 
-            
-            Make note of:
-            - Other characters, when and where they've left or died, and what you think of them.
-            - Steps you plan to take in the near future.
-            
-            Keep your summary in first-person."""}]
+        prompt = long_term_memory + self.context + [{"role": "developer", "content": self.summary_message}]
         
         response = self.llm.prompt(prompt)
         self.summary = response.output_text
-        
 
         self.log(f"Created a summary:\n{response.output}")
 

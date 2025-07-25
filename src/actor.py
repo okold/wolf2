@@ -55,6 +55,7 @@ class Actor(Process):
         self.can_speak = can_speak
         self.gender = gender
         self.role = "NPC"
+        self.phase = "Default Phase"
 
         self.strength = strength # feats of physical prowess
         self.intelligence = intelligence # knowing things

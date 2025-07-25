@@ -104,7 +104,13 @@ class NPC(Actor):
         timestamp = datetime.now()
         self.logger = create_npc_logger(name, timestamp)
         self.is_awake = False
-        self.phase = "day"
+
+    def update_summary_message(self, new_summary_message : str):
+        self.context.summary_message = new_summary_message
+
+    def summarize(self):
+        self.update_summary_message("")
+        self.context.summarize()
 
     def run(self):
         self.connect()
@@ -122,14 +128,11 @@ class NPC(Actor):
                     if msg["type"] == "context" and self.is_awake:
                         self.context.append(msg["content"])
                         new_messages = True
+                    elif msg["type"] == "summarize":
+                        self.context.summarize()
+                        self.logger.info(f"Forced a summary!")
                     elif msg["type"] == "room":
                         self.room_info = msg["content"]
-                        if msg["content"] == "Village Tavern":
-                            self.phase = "day"
-                        else:
-                            self.phase = "night"
-                        #elf.logger.info(f"received room_info: {msg['content']}")
-                        #elf.logger.info(self.room_info)
                     elif msg["type"] == "role":
                         self.role = msg["content"]
                         self.logger.info(f"Received role: {self.role}")
@@ -139,6 +142,9 @@ class NPC(Actor):
                     elif msg["type"] == "wake":
                         self.is_awake = True
                         self.logger.info(f"Woken up!")
+                    elif msg["type"] == "phase":
+                        self.phase = msg["content"]
+                        self.logger.info(f"Phase set to: {msg['content']}")
                     elif msg["type"] == "vote_targets":
                         self.vote_targets = msg["content"]
                         self.logger.info(f"Received vote targets: {self.vote_targets}")

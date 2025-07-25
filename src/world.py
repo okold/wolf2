@@ -163,6 +163,20 @@ class World(Process):
         except Exception as e:
             self.logger.error(f"Failed to send message to actor {actor}: {e}")
 
+    def send_summary_message(self, actor: str):
+        try:
+            with self.actors_lock:
+                self.actors[actor]["conn"].send({"type": "srummy"})
+        except Exception as e:
+            self.logger.error(f"Failed to send message to actor {actor}: {e}")
+
+    def send_phase_message(self, actor: str, phase : str):
+        try:
+            with self.actors_lock:
+                self.actors[actor]["conn"].send({"type": "phase", "content": phase})
+        except Exception as e:
+            self.logger.error(f"Failed to send message to actor {actor}: {e}")
+
     def send_sleep_message(self, actor: str):
         try:
             with self.actors_lock:
@@ -316,6 +330,7 @@ class World(Process):
                         output = f"{actor[0]} has left the room!"
                         self.default_room.remove_actor(actor[0])
 
+                    del self.actors[actor]["room"][actor]
                     self.send_to_room(self.actors[actor]["room"], {"role": "user", "content": output})
                 except Exception as e:
                     self.logger.warning(e)
