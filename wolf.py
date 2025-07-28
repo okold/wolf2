@@ -199,13 +199,13 @@ class WolfWorld(World):
                             self.move_actor_to_room(actor, self.day_room.name)
                             self.send_summary_message(actor)
                             morning_message = f"You have met at the village tavern, to discuss {vote_result}'s death."
-                            self.send_to_room(self.day_room, {"role": "system", "content": morning_message})
+                            self.send_to_actor(actor, {"role": "system", "content": morning_message})
                             phase_duration = self.DAY_PHASE_LENGTH
                         elif self.phase == "night" and self.actors[actor]["role"] == "werewolf":
                             self.move_actor_to_room(actor, self.night_room.name)
                             self.send_summary_message(actor)
                             evening_message = f"You are meeting at the werewolf hideout. Plan your next kill!"
-                            self.send_to_room(self.night_room, {"role": "system", "content": evening_message})
+                            self.send_to_actor(actor, {"role": "system", "content": evening_message})
                             phase_duration = self.NIGHT_PHASE_LENGTH
                     except Exception as e:
                         self.logger.exception(e)
@@ -225,45 +225,11 @@ class WolfWorld(World):
 
 class WolfNPC(NPC):
 
-    SYSTEM_MESSAGE = """You are an actor in a game of Werewolf. The rules of the game are:
-        - During the night phase, only werewolf players are active.
-        The night phase lasts for one minute, or until a vote has passed.
+    def __init__(self, name, personality, goal, description, can_speak, gender):
+        super().__init__(name, personality, goal, description, can_speak, gender)
 
-        - During the day phase, every player votes on who to lynch.
-        The day phase lasts for two minutes, or until a vote has passed.
-        
-    At the end of the current phase, the role of the killed player is revealed.
-
-    The werewolves win if all villagers have been killed.
-    The villagers win if the werewolves have been killed.
-
-    Your output must be valid JSON. 
-    Example: { "action": <action_name>, "content": <varies_by_action>, "target": <name>, "comment": <additional_dialogue> }
-
-    Available actions are:
-        - speak: whatever you say will be broadcast to others in the room. If two people try to speak at once, one may be interrupted.
-        Example: { "action": "speak", "content": "I am saying something."}
-
-        - gesture: allows you to gesture
-            - comment is optional
-        Example: { "action": "gesture", "content": "throws her hands in the air" }
-        Example: { "action": "gesture", "content": "points at the Bandit", "comment": "You're a wanted criminal!" }
-
-        - yell: messages will always go through
-        Example: { "action": "yell", "content": "HANDS IN THE AIR! THIS IS A STICK-UP!" }
-
-        - listen: do nothing, waiting for more messages
-        Example: { "action": "listen" }
-
-        - vote: vote on a player to kill (night) or lynch (day)
-        Example: { "action": "vote", "target": "Bandit" }
-
-    Stay in character. 
-    Only act from your own perspective. 
-    Try to inject something new into the conversation.
-    You may only do one action at a time.
-    When speaking, limit yourself to one sentence.
-    """
+        with open('game/npc_system_message.txt', 'r', encoding='utf-8') as file:
+            self.SYSTEM_MESSAGE = file.read()
 
     def character_sheet(self) -> str:
         """

@@ -149,7 +149,7 @@ class World(Process):
             self.logger.error(f"Failed to poll connection, creating leave message for actor. Error message: {e}")
             return {"action": "leave", "reason": "disconnect", "room": ""}
     
-    def send_to_actor(self, actor : str, message: dict, type = "context"):
+    def send_to_actor(self, actor : str, message: dict | str, type = "context"):
         """
         Attempts to send a message to the designated Actor
 
@@ -160,6 +160,8 @@ class World(Process):
         """
         try:
             with self.actors_lock:
+                if isinstance(message, str) and type == "context":
+                    message = {"role": "system", "content": message}
                 self.actors[actor]["conn"].send({"type": type, "content": message})
         except Exception as e:
             self.logger.error(f"Failed to send message to actor {actor}: {e}")
@@ -167,7 +169,7 @@ class World(Process):
     def send_summary_message(self, actor: str):
         try:
             with self.actors_lock:
-                self.actors[actor]["conn"].send({"type": "srummy"})
+                self.actors[actor]["conn"].send({"type": "summarize"})
         except Exception as e:
             self.logger.error(f"Failed to send message to actor {actor}: {e}")
 
@@ -217,19 +219,17 @@ class World(Process):
             except Exception as e:
                 self.logger.error(f"Failed to send message to room {room}: {e}")            
 
-    def broadcast(self, message: dict, type = "context"):
+    def broadcast(self, message: str | dict, type = "context"):
         for actor in self.actors:
             self.send_to_actor(actor, message, type)
-        self.print_info(message)
+        #self.print_info(message)
 
-    def send_to_room(self, room: str | Room, message: dict, type = "context", verbose = False):
+    def send_to_room(self, room: str | Room, message: dict, type = "context", verbose = True):
         with self.rooms_lock:
             try:
                 if isinstance(room, str):
                     for actor in self.rooms[room].actors:
                         self.send_to_actor(actor, message, type)
-                    if verbose:
-                        self.print_info(message)
                 elif isinstance(room, Room):
                     for actor in room.actors:
                         self.send_to_actor(actor, message, type)
@@ -255,7 +255,7 @@ class World(Process):
 
             self.rooms[room].add_actor(data)
             arrival_message = f"{actor} has entered the {room}!"
-            self.send_to_room(room, {"role": "user", "content": arrival_message}, verbose=verbose)
+            self.send_to_room(room, {"role": "user", "content": arrival_message})
             self.send_to_room(room, self.rooms[room].state(), "room", verbose=verbose)
 
     # NOTE: this is NOT THREAD SAFE, and is intended to be called already within a lock
