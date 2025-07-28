@@ -125,7 +125,7 @@ class NPC(Actor):
                 while self.conn.poll():
                     msg = self.conn.recv()
 
-                    if msg["type"] == "context" and self.is_awake:
+                    if msg["type"] == "context":
                         self.context.append(msg["content"])
                         new_messages = True
                     elif msg["type"] == "summarize":

@@ -147,7 +147,7 @@ class World(Process):
             return None
         except Exception as e:
             self.logger.error(f"Failed to poll connection, creating leave message for actor. Error message: {e}")
-            return {"action": "leave", "reason": "disconnect"}
+            return {"action": "leave", "reason": "disconnect", "room": ""}
     
     def send_to_actor(self, actor : str, message: dict, type = "context"):
         """
@@ -192,20 +192,28 @@ class World(Process):
         except Exception as e:
             self.logger.error(f"Failed to send message to actor {actor}: {e}")
 
-    def awaken_room(self, room):
+    def awaken_room(self, room: str | Room):
         with self.rooms_lock:
             try:
-                for actor in self.rooms[room].actors:
-                    self.send_wake_message(actor)
+                if isinstance(room, str):
+                    for actor in self.rooms[room].actors:
+                        self.send_wake_message(actor)
+                elif isinstance(room, Room):
+                    for actor in room.actors:
+                        self.send_wake_message(actor)
             except Exception as e:
                 self.logger.error(f"Failed to send message to room {room}: {e}")
 
 
-    def sleep_room(self, room):
+    def sleep_room(self, room: str | Room):
         with self.rooms_lock:
             try:
-                for actor in self.rooms[room].actors:
-                    self.send_sleep_message(actor)
+                if isinstance(room, str):
+                    for actor in self.rooms[room].actors:
+                        self.send_sleep_message(actor)
+                elif isinstance(room, Room):
+                    for actor in room.actors:
+                        self.send_sleep_message(actor)
             except Exception as e:
                 self.logger.error(f"Failed to send message to room {room}: {e}")            
 
@@ -214,11 +222,17 @@ class World(Process):
             self.send_to_actor(actor, message, type)
         self.print_info(message)
 
-    def send_to_room(self, room: str, message: dict, type = "context", verbose = True):
+    def send_to_room(self, room: str | Room, message: dict, type = "context", verbose = False):
         with self.rooms_lock:
             try:
-                for actor in self.rooms[room].actors:
-                    self.send_to_actor(actor, message, type)
+                if isinstance(room, str):
+                    for actor in self.rooms[room].actors:
+                        self.send_to_actor(actor, message, type)
+                    if verbose:
+                        self.print_info(message)
+                elif isinstance(room, Room):
+                    for actor in room.actors:
+                        self.send_to_actor(actor, message, type)
                 if verbose:
                     self.print_info(message)
             except Exception as e:
@@ -417,7 +431,7 @@ class World(Process):
             
             self.clean_flagged_actors()    
             
-            time.sleep(World.WAIT_TIME)
+            time.sleep(self.WAIT_TIME)
     
 if __name__ == "__main__":
     parent_conn, child_conn = Pipe()

@@ -39,6 +39,9 @@ def resolve_majority_vote(votes: dict) -> str | None:
 
 class WolfWorld(World):
 
+    NIGHT_PHASE_LENGTH = 60
+    DAY_PHASE_LENGTH = 120
+    NOTIFY_PERIOD = 30
     PLAYER_COUNT = 6
     NUM_WOLVES = 2
 
@@ -107,16 +110,23 @@ class WolfWorld(World):
             if role == "werewolf":
                 self.move_actor_to_room(actor, self.night_room.name)
 
+        phase_number = 1
+
+        print(f"------------- {self.phase.upper()} {phase_number} ---")
+
         self.reset_votes()
+        self.send_to_room(self.night_room.name, {"role": "system", "content": "This is the first night. You werewolves have met to plot your first kill."})
         self.awaken_room(self.night_room.name)            
+
+        
+        phase_start_time = time.time()
+        last_notify = phase_start_time
+        phase_duration = self.NIGHT_PHASE_LENGTH
 
         # main loop
         while True:
-
             # logic for who gets to successfully speak this round
             speak_contest = SpeakingContest(self.current_room.name)
-
-
 
             # check for cli messages
             msg = self.try_recv(self.cli)
@@ -151,87 +161,76 @@ class WolfWorld(World):
 
             vote_result = resolve_majority_vote(self.votes)
 
-            if vote_result:
-                self.remove(vote_result, "killed")
-                self.send_to_room(self.current_room.name, {"role": "system", "content": f"{vote_result} has been killed! Role: {self.actors[vote_result]['role']}."})
+            elapsed = int(time.time() - phase_start_time)
+
+            if elapsed < phase_duration:
+                if time.time() - last_notify >= self.NOTIFY_PERIOD:
+                    message = f"There are {phase_duration - elapsed} seconds remaining in the phase!"
+                    self.print_info(message)
+                    self.send_to_room(self.current_room.name, {"role": "system", "content": message})
+                    last_notify = time.time()
+
+            if vote_result or elapsed >= phase_duration:
+                if vote_result:
+                    self.remove(vote_result, "killed")
+                    self.send_to_room(self.current_room.name, {"role": "system", "content": f"{vote_result} has been killed! Role: {self.actors[vote_result]['role']}."})
 
                 if self.phase == "night":
                     self.phase = "day"
                     self.current_room = self.day_room
+                    phase_number += 1
                     
                 else:
                     self.phase = "night"
                     self.current_room = self.night_room
                     self.print_info("Moved to Night phase!")
 
-                self.send_to_room(self.current_room.name, f"It is now the {self.phase} phase!")
+                print(f"------------- {self.phase.upper()} {phase_number} ---")
+                self.send_to_room(self.current_room.name, {"role": "system", "content": f"It is now the {self.phase} phase!"})
 
                 self.clean_flagged_actors(verbose=False)
 
                 for actor in self.actors:
-                        try:
-                            self.send_sleep_message(actor)
-                            self.send_phase_message(actor, self.phase)
+                    try:
+                        self.send_sleep_message(actor)
+                        self.send_phase_message(actor, self.phase)
 
-                            if self.phase == "day":
-                                self.move_actor_to_room(actor, self.day_room.name)
-                                self.send_summary_message(actor)
-                                morning_message = f"The village meets at the tavern during the day, to discuss {vote_result}'s death. Who is guilty?"
-                                self.send_to_room(self.day_room, morning_message)
-                                self.print_info(morning_message)
-                            elif self.phase == "night" and self.actors[actor]["role"] == "werewolf":
-                                self.move_actor_to_room(actor, self.night_room.name)
-                                self.send_summary_message(actor)
-                                evening_message = f"You are meeting at the werewolf hideout. Plan your next kill!"
-                                self.send_to_room(self.night_room, evening_message)
-                                self.print_info(evening_message)
-                        except Exception as e:
-                            self.logger.exception(e)
+                        if self.phase == "day":
+                            self.move_actor_to_room(actor, self.day_room.name)
+                            self.send_summary_message(actor)
+                            morning_message = f"You have met at the village tavern, to discuss {vote_result}'s death."
+                            self.send_to_room(self.day_room, {"role": "system", "content": morning_message})
+                            phase_duration = self.DAY_PHASE_LENGTH
+                        elif self.phase == "night" and self.actors[actor]["role"] == "werewolf":
+                            self.move_actor_to_room(actor, self.night_room.name)
+                            self.send_summary_message(actor)
+                            evening_message = f"You are meeting at the werewolf hideout. Plan your next kill!"
+                            self.send_to_room(self.night_room, {"role": "system", "content": evening_message})
+                            phase_duration = self.NIGHT_PHASE_LENGTH
+                    except Exception as e:
+                        self.logger.exception(e)
                     
                 self.reset_votes()
                 self.awaken_room(self.current_room.name)
 
+                phase_start_time = time.time()
+                last_notify = phase_start_time
+
             
             self.clean_flagged_actors()    
 
-            time.sleep(World.WAIT_TIME)
+            time.sleep(self.WAIT_TIME)
 
 
 
 class WolfNPC(NPC):
 
-    SYSTEM_MESSAGE_GEN = """You are an actor in a game of Werewolf. Stay in character and try to win according to your role.
-
-PHASES:
-- NIGHT (2 min or until vote passes): Only werewolves act. They vote on a target to kill.
-- DAY (5 min or until vote passes): All players act. Everyone votes on someone to lynch.
-At the end of each phase, the killed player's role is revealed.
-
-ROLES:
-- WEREWOLF: Coordinate quietly at night. Blend in during the day. Don't reveal your role. Push suspicion subtly.
-- VILLAGER: Use conversation to identify and vote out werewolves. Trust cautiously.
-
-VICTORY:
-- Werewolves win if all villagers are dead.
-- Villagers win if all werewolves are dead.
-
-Your output must be valid JSON with ONE action per message.
-Examples:
-{ "action": "speak", "content": "I don’t trust Elda." }
-{ "action": "gesture", "content": "shrugs", "comment": "Could be anyone." }
-{ "action": "vote", "target": "Boof" }
-{ "action": "listen" }
-
-Available actions: speak, gesture, yell, listen,It is now the {self.phase} phase vote.
-
-Only act from your perspective. Don’t repeat yourself. Move the conversation forward."""
-
     SYSTEM_MESSAGE = """You are an actor in a game of Werewolf. The rules of the game are:
         - During the night phase, only werewolf players are active.
-        The night phase lasts for two minutes, or until a vote has passed.
+        The night phase lasts for one minute, or until a vote has passed.
 
         - During the day phase, every player votes on who to lynch.
-        The day phase lasts for five minutes, or until a vote has passed.
+        The day phase lasts for two minutes, or until a vote has passed.
         
     At the end of the current phase, the role of the killed player is revealed.
 
@@ -263,6 +262,7 @@ Only act from your perspective. Don’t repeat yourself. Move the conversation f
     Only act from your own perspective. 
     Try to inject something new into the conversation.
     You may only do one action at a time.
+    When speaking, limit yourself to one sentence.
     """
 
     def character_sheet(self) -> str:
