@@ -61,9 +61,6 @@ class WolfWorld(World):
                           {"role": "system", "content": f"{actor} has voted for {target}!"})
         if target in self.valid_vote_targets:
             self.votes[actor] = target
-
-        
-
         
     def reset_votes(self):
         self.valid_vote_targets = []
@@ -174,12 +171,15 @@ class WolfWorld(World):
                         try:
                             self.send_sleep_message(actor)
                             self.send_phase_message(actor, self.phase)
-                            self.send_summary_message(actor)
 
                             if self.phase == "day":
                                 self.move_actor_to_room(actor, self.day_room.name)
+                                self.send_summary_message(actor)
+                                self.send_to_room(self.current_room.name, f"The village meets at the tavern during the day, to discuss {vote_result}'s death. Who is guilty?")
                             elif self.phase == "night" and self.actors[actor]["role"] == "werewolf":
                                 self.move_actor_to_room(actor, self.night_room.name)
+                                self.send_summary_message(actor)
+                                self.send_to_room(self.current_room.name, f"The werewolves are meeting at the hidout. Plan your next kill!")
                         except Exception as e:
                             self.logger.exception(e)
                     
