@@ -11,7 +11,7 @@ At the end of the current phase, the role of the killed player is revealed, if a
 
 The werewolves win if all villagers have been killed.
 The villagers win if the werewolves have been killed.
-The seer is a type of villager. There is one seer per game.
+The seer is a type of villager. There is one seer per game. The seer does not choose targets in this version of the game.
 
 If the game is ongoing, then there is a mix of players still remaining.
 

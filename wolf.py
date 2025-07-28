@@ -97,22 +97,27 @@ class WolfWorld(World):
             time.sleep(1) # TODO: variable here
 
 
-        roles = ["werewolf"] * 2 + ["villager"] * 4
+        roles = ["werewolf"] * 2 + ["villager"] * 3 + ["seer"]
         random.shuffle(roles)
 
         for actor in self.actors:
             self.send_sleep_message(actor)
 
+        phase_number = 1
+        print(f"------------- {self.phase.upper()} {phase_number} ---")
+
+        seer_targets = {}
+
         for actor, role in zip(self.actors, roles):
             self.actors[actor]["role"] = role
             self.send_to_actor(actor, role, "role")
 
+            if role != "seer":
+                seer_targets[actor] = role
+
             if role == "werewolf":
                 self.move_actor_to_room(actor, self.night_room.name)
 
-        phase_number = 1
-
-        print(f"------------- {self.phase.upper()} {phase_number} ---")
 
         self.reset_votes()
         self.send_to_room(self.night_room.name, {"role": "system", "content": "This is the first night. You werewolves have met to plot your first kill."})
@@ -173,6 +178,7 @@ class WolfWorld(World):
             if vote_result or elapsed >= phase_duration:
                 if vote_result:
                     self.remove(vote_result, "killed")
+                    del seer_targets[vote_result]
                     self.send_to_room(self.current_room.name, {"role": "system", "content": f"{vote_result} has been killed! Role: {self.actors[vote_result]['role']}."})
 
                 if self.phase == "night":
@@ -197,13 +203,17 @@ class WolfWorld(World):
 
                         if self.phase == "day":
                             self.move_actor_to_room(actor, self.day_room.name)
-                            self.send_summary_message(actor)
+                            #self.send_summary_message(actor)
                             morning_message = f"You have met at the village tavern, to discuss {vote_result}'s death."
                             self.send_to_actor(actor, {"role": "system", "content": morning_message})
                             phase_duration = self.DAY_PHASE_LENGTH
+                            if self.actors[actor]["role"] == "seer":
+                                target = random.choice(list(seer_targets.keys()))
+                                self.send_to_actor(actor, {"role": "system", "content": f"You receieved a vision at night! {target} is a {seer_targets[target]}!"})
+                                del seer_targets[target]
                         elif self.phase == "night" and self.actors[actor]["role"] == "werewolf":
                             self.move_actor_to_room(actor, self.night_room.name)
-                            self.send_summary_message(actor)
+                            #self.send_summary_message(actor)
                             evening_message = f"You are meeting at the werewolf hideout. Plan your next kill!"
                             self.send_to_actor(actor, {"role": "system", "content": evening_message})
                             phase_duration = self.NIGHT_PHASE_LENGTH
@@ -242,7 +252,7 @@ class WolfNPC(NPC):
         Game phase: {self.phase}
         Your personality: {self.personality}
         Your gender: {self.gender}
-        Your speech Capability: {self.can_speak}
+        Your speech capability: {self.can_speak}
 
         You are currently in a room named: {self.room_info['name']}
         {self.room_info['description']}
@@ -266,6 +276,7 @@ class WolfNPC(NPC):
         You are playing a game of werewolf, and your role is: {self.role}.
         The current phase of the game is: {self.phase}
         Remember your allies and keep in mind any strategies for proceeding.
+        If you are the seer, remember your visions.
         """
         return super().update_summary_message(new_message)
 
