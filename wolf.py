@@ -166,8 +166,9 @@ class WolfWorld(World):
 
                 self.send_to_room(self.current_room.name, f"It is now the {self.phase} phase!")
 
+                self.clean_flagged_actors(verbose=False)
+
                 for actor in self.actors:
-                    if self.actors[actor]["status"] == "alive":
                         try:
                             self.send_sleep_message(actor)
                             self.send_phase_message(actor, self.phase)
@@ -175,11 +176,15 @@ class WolfWorld(World):
                             if self.phase == "day":
                                 self.move_actor_to_room(actor, self.day_room.name)
                                 self.send_summary_message(actor)
-                                self.send_to_room(self.current_room.name, f"The village meets at the tavern during the day, to discuss {vote_result}'s death. Who is guilty?")
+                                morning_message = f"The village meets at the tavern during the day, to discuss {vote_result}'s death. Who is guilty?"
+                                self.send_to_room(self.day_room, morning_message)
+                                self.print_info(morning_message)
                             elif self.phase == "night" and self.actors[actor]["role"] == "werewolf":
                                 self.move_actor_to_room(actor, self.night_room.name)
                                 self.send_summary_message(actor)
-                                self.send_to_room(self.current_room.name, f"The werewolves are meeting at the hidout. Plan your next kill!")
+                                evening_message = f"You are meeting at the werewolf hideout. Plan your next kill!"
+                                self.send_to_room(self.night_room, evening_message)
+                                self.print_info(evening_message)
                         except Exception as e:
                             self.logger.exception(e)
                     
@@ -217,7 +222,7 @@ Examples:
 { "action": "vote", "target": "Boof" }
 { "action": "listen" }
 
-Available actions: speak, gesture, yell, listen, vote.
+Available actions: speak, gesture, yell, listen,It is now the {self.phase} phase vote.
 
 Only act from your perspective. Don’t repeat yourself. Move the conversation forward."""
 

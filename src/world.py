@@ -10,6 +10,7 @@ from npc import create_npc_logger
 from typing import Optional
 from pydantic import BaseModel
 from speech import SpeakingContest
+import traceback
 
 ADDRESS = ("localhost", 6000) #TODO: something about this
 
@@ -313,28 +314,32 @@ class World(Process):
         except Exception as e:
             self.logger.warning(e)
 
-    def clean_flagged_actors(self):
+    def clean_flagged_actors(self, verbose = True):
         """
         Removes all actors in the flagged_actors list.
         """
         if self.flagged_actors:
-            for actor in self.flagged_actors:
+            for flag in self.flagged_actors:
                 try:
-                    self.actors[actor[0]]["conn"].close()
-                    self.actors.pop(actor[0], None)
+                    actor = flag[0]
+                    reason = flag[1]
+                    room = self.actors[actor]["room"]
 
-                    if actor[1] == "killed":
-                        output = f"{actor[0]} has been killed!"
-                        self.default_room.kill_actor(actor[0])
+                    self.actors[actor]["conn"].close()
+                    self.actors.pop(actor, None)
+
+                    if reason == "killed":
+                        output = f"{actor} has been killed!"
                     else:
-                        output = f"{actor[0]} has left the room!"
-                        self.default_room.remove_actor(actor[0])
+                        output = f"{actor} has left the room!"
+                    
+                    self.rooms[room].remove_actor(actor)
 
-                    del self.actors[actor]["room"][actor]
-                    self.send_to_room(self.actors[actor]["room"], {"role": "user", "content": output})
+                    if verbose:
+                        self.send_to_room(room, {"role": "user", "content": output})
+                    
                 except Exception as e:
                     self.logger.warning(e)
-
             for room in self.rooms:
                 self.send_to_room(room, self.rooms[room].state(), "room")
 
