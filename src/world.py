@@ -6,6 +6,7 @@ import time
 from room import Room
 import random
 from llm import LLM
+from colorama import Style
 from datetime import datetime
 from npc import create_npc_logger
 from speech import SpeakingContest
@@ -101,7 +102,7 @@ class World(Process):
                         if message["role"] == "user":
                             message = message["content"]
                         elif message["role"] == "system":
-                            message = f"SYSTEM: {message['content']}"
+                            message = f"\033[1mSYSTEM:\033[0m {message['content']}"
                     except:
                         pass
 
@@ -262,7 +263,7 @@ class World(Process):
             self.send_to_room(room, self.rooms[room].state(), "room", verbose=False)
 
     # NOTE: this is NOT THREAD SAFE, and is intended to be called already within a lock
-    def yell(self, actor: str, content: str):
+    def yell(self, actor: str, content: str, colour = None):
         """
         Broadcasts a message to everyone in the format:
 
@@ -272,8 +273,15 @@ class World(Process):
             actor (str): the name of the yelling Actor
             content (str): the message they're yelling
         """
-        output = f"{actor} yells, \"{content.upper()}\""
-        self.send_to_room(self.actors[actor]["room"], {"role": "user", "content": output})
+        output_plain = f"{actor} yells, \"{content.upper()}\""
+        self.send_to_room(self.actors[actor]["room"], {"role": "user", "content": output_plain}, verbose=False)
+
+        if colour:
+            output_fancy = colour + actor + Style.RESET_ALL + " yells, " + Style.BRIGHT + "\"" + content.upper() + "\"" + Style.RESET_ALL
+        else:
+            output_fancy = f"{actor} yells, " + Style.BRIGHT + "\"" + content.upper() + "\"" + Style.RESET_ALL
+        
+        self.log(output_fancy)
 
     # NOTE: this is NOT THREAD SAFE, and is intended to be called already within a lock
     # TODO: an ACTUAL inventory system. for now, it's just pretend.

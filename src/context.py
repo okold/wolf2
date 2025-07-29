@@ -16,8 +16,8 @@ class Context(ABC):
         summary (str): for pre-loading long-term memory
         logger (Logger): to log
     """
-    DEFAULT_LIMIT = 30
-    DEFAULT_KEEP = 10
+    DEFAULT_LIMIT = 40
+    DEFAULT_KEEP = 20
 
 
     def __init__(self, 

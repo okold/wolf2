@@ -47,8 +47,8 @@ class NPC(Actor):
     WAIT_MIN_ABS = 5
     WAIT_MAX_ABS = 15
 
-    WAIT_MIN = 3
-    WAIT_MAX = 5
+    WAIT_MIN = 2
+    WAIT_MAX = 6
 
     SYSTEM_MESSAGE = """You are an actor in a role-playing system that functions like a chat room.
         Your output must be valid JSON. Example:
@@ -153,6 +153,8 @@ class NPC(Actor):
 
             except EOFError:
                 break
+            except ConnectionResetError:
+                break
 
             if self.is_awake and (new_messages or quiet_round_passed):
                 prompt = [
@@ -203,7 +205,10 @@ class NPC(Actor):
             # to keep things from going too fast
             time.sleep(random.randint(self.WAIT_MIN, self.WAIT_MAX)) 
 
-        self.conn.close()
+        try:
+            self.conn.close()
+        except:
+             pass
 
 if __name__ == "__main__":
 
