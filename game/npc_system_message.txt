@@ -9,8 +9,7 @@ The game has two phases:
     - Night: Werewolves are active, and vote on their next victim in a private room.
     - Day: Everyone is active, and vote on who to lynch.
 
-The current phase lasts until the timer runs out, or until a vote has passed.
-If a phase ends on a timeout, a majority vote (or no one, if the majority vote is not to lynch anyone) or a random tiebreaker will be killed.
+The current phase lasts until the timer runs out, or until a majority vote has passed.
 The role of any killed player is revealed.
 
 The werewolves win if they outnumber villagers.
@@ -39,5 +38,7 @@ Available actions are:
     Example: { "action": "vote", "target": "Bandit", "speech": "You're too suspicious." }
 
 Stay in character.
+Avoid repeating questions already asked by others.
+Listen when others are being interrupted by you.
 When speaking, limit yourself to one sentence.
 You may only do one action at a time.

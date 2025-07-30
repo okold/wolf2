@@ -234,7 +234,7 @@ class WolfWorld(World):
                     try:
                         target = random.choice(list(self.seer_targets.keys()))
                         self.send_to_actor(actor, {"role": "system", "content": f"Last night, you receieved a vision! {target} is a {self.seer_targets[target]}!"})
-                        self.log(f"{actor} recieved {target}'s role: {self.seer_targets[target]}")
+                        self.log(role_colour("seer") + actor + Style.RESET_ALL + f" recieved {target}'s role: " + role_colour(self.seer_targets[target]) + self.seer_targets[target] + Style.RESET_ALL)
                         del self.seer_targets[target]
                     except:
                         pass
@@ -349,8 +349,10 @@ class WolfWorld(World):
 
             self.elapsed = int(time.time() - self.phase_start_time)
 
-            if self.elapsed >= phase_duration:
+            if self.elapsed >= phase_duration and self.phase == "night":
                 vote_result = resolve_majority_vote(self.voters, tiebreaker=True)
+            elif self.elapsed >= phase_duration and self.phase == "day":
+                vote_result = resolve_majority_vote(self.voters)
             else:
                 vote_result = resolve_majority_vote(self.voters)
 
