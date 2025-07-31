@@ -55,14 +55,7 @@ class LLM:
         """
 
         try:
-
-            if self.cloud and enforce_action:
-                response = self.client.chat.completions.create(
-                    model = self.model,
-                    messages=message,
-                    text = {"format": {"type": "json_object"}}
-                )
-            elif enforce_action:
+            if enforce_action:
                 response = self.client.chat.completions.parse(
                     model = self.model,
                     messages=message,

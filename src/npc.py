@@ -89,9 +89,12 @@ class NPC(Actor):
     You may only do one action at a time.
     """
 
-    def __init__(self, name, personality, goal, description, can_speak, gender):
+    def __init__(self, name, personality, goal, description, can_speak, gender, llm=None):
         super().__init__(name, personality, goal, description, can_speak=can_speak, gender=gender)
-        self.llm = LLM()
+        if not llm:
+            self.llm = LLM()
+        else:
+            self.llm = llm
 
         # by default, uses its own LLM for context management, but in theory,
         # could use a different LLM for summarizing than for dialogue generation
