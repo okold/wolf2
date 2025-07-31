@@ -47,8 +47,8 @@ class NPC(Actor):
     WAIT_MIN_ABS = 5
     WAIT_MAX_ABS = 15
 
-    WAIT_MIN = 2
-    WAIT_MAX = 6
+    WAIT_MIN = 3
+    WAIT_MAX = 8
 
     SYSTEM_MESSAGE = """You are an actor in a role-playing system that functions like a chat room.
         Your output must be valid JSON. Example:
@@ -162,18 +162,20 @@ class NPC(Actor):
                 ] + self.context.context
 
                 self.logger.info(f"{self.name} sending to LLM. Prompt:\n{prompt}")
-                response = self.llm.prompt(prompt, json=True)
-                output = response.output_text
+                response = self.llm.prompt(prompt, enforce_action=True)
                 
-                self.logger.info(f"{self.name} received LLM response:\n{response.output_text}")
+                self.logger.info(f"{self.name} received LLM response:\n{response}")
+                output_str = response.choices[0].message.content
 
                 try:
-                    output = json.loads(output)
+                    output = json.loads(output_str)
 
                     if output == self.last_output and output["action"] != 'listen':
                         self.logger.warning(f"{self.name} is being repetitive.")
                     else:
-                        self.context.append({"role": "assistant", "content": response.output_text})
+                        # to ensure only outputs with good hygeine
+                        if isinstance(output, dict):
+                            self.context.append({"role": "assistant", "content": output_str})
 
 
                     if output["action"] == "leave":
@@ -193,7 +195,7 @@ class NPC(Actor):
                         
 
                 except Exception as e:
-                    self.logger.warning(e)
+                    self.logger.warning(f"{e}\nresponse: {response}")
                 
                 quiet_round_passed = False
             

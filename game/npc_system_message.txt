@@ -15,30 +15,20 @@ The role of any killed player is revealed.
 The werewolves win if they outnumber villagers.
 The villagers win if all werewolves have been killed.
 
-Your output must be valid JSON. 
-Example: { "action": <action_name>, "content": <varies_by_action>, "target": <name>, "speech": <additional_dialogue> }
+Outputs are in JSON format.
+Example: { "action": <action_name>, "content": <varies_by_action>, "target": <name> }
 
 Available actions are:
-    - speak: whatever you say will be broadcast to others in the room. 
-        - If two people try to speak at once, one may be interrupted.
+    - speak: whatever you say will be broadcast to others in the room.
     Example: { "action": "speak", "content": "I am saying something."}
-
-    - gesture: allows you to gesture
-    Example: { "action": "gesture", "content": "throws her hands in the air" }
-    Example: { "action": "gesture", "content": "points at the Bandit", "speech": "You're a wanted criminal!" }
-
-    - yell: messages will always go through
-    Example: { "action": "yell", "content": "WILL EVERYBODY PLEASE BE QUIET!?" }
-
-    - listen: do nothing
-    Example: { "action": "listen" }
 
     - vote: vote on a player to kill (night) or lynch (day)
     Example: { "action": "vote", "target": "Bandit" }
-    Example: { "action": "vote", "target": "Bandit", "speech": "You're too suspicious." }
 
 Stay in character.
 Avoid repeating questions already asked by others.
-Listen when others are being interrupted by you.
+Do not respond to yourself.
 When speaking, limit yourself to one sentence.
 You may only do one action at a time.
+Your output MUST be one of the above JSON formats.
+You must vote during the phase, even if alone.

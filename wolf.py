@@ -66,9 +66,9 @@ def normalize_role(role):
 
 class WolfWorld(World):
 
-    NIGHT_PHASE_LENGTH = 60
-    DAY_PHASE_LENGTH = 120
-    NOTIFY_PERIOD = 20
+    NIGHT_PHASE_LENGTH = 300
+    DAY_PHASE_LENGTH = 780
+    NOTIFY_PERIOD = 60
     PLAYER_COUNT = 6
     NUM_WOLVES = 2
     PRINT_COOLDOWN = 3
@@ -217,9 +217,9 @@ class WolfWorld(World):
             day_message += "\n\tIf a werewolf is not lynched today, then the werewolves win!"
 
         if wolf_count == 1:
-            night_message = f"You are the last remaining werewolf.\n\t{villager_count} villagers remain."
+            night_message = f"You are the last remaining werewolf. Vote for your next kill! \n\t{villager_count} villagers remain."
         else:
-            night_message = f"You are meeting at the werewolf hideout.\n\t{villager_count} villagers remain."
+            night_message = f"You are meeting at the werewolf hideout. Vote for your next kill! \n\t{villager_count} villagers remain."
 
         # put the actors to sleep and move them
         for actor in self.actors:

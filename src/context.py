@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from llm import LLM, GPTMessage
+from llm import LLM
 import logging
 
 from pydantic import BaseModel
@@ -16,15 +16,15 @@ class Context(ABC):
         summary (str): for pre-loading long-term memory
         logger (Logger): to log
     """
-    DEFAULT_LIMIT = 40
-    DEFAULT_KEEP = 20
+    DEFAULT_LIMIT = 20
+    DEFAULT_KEEP = 10
 
 
     def __init__(self, 
                  llm: LLM = None, 
                  context_limit = DEFAULT_LIMIT, 
                  context_keep = DEFAULT_KEEP, 
-                 context: list[GPTMessage] = [], 
+                 context: list[dict] = [], 
                  summary = "", 
                  logger: logging.Logger = None):
         self.llm = llm
@@ -48,7 +48,7 @@ class Context(ABC):
         start = max(0, len(self.context) - self.context_keep)
         self.context = self.context[start:]
 
-    def append(self, message: GPTMessage):
+    def append(self, message: dict):
         """
         Appends a GPTMessage to the context
         """
@@ -108,9 +108,9 @@ class SummaryContext(Context):
         prompt = long_term_memory + self.context + [{"role": "developer", "content": self.summary_message}]
         
         response = self.llm.prompt(prompt)
-        self.summary = response.output_text
+        self.summary = response.choices[0].message.content
 
-        self.log(f"Created a summary:\n{response.output}")
+        self.log(f"Created a summary:\n{self.summary}")
 
     def on_limit_reached(self):
         """

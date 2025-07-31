@@ -1,0 +1,16 @@
+2025-07-29 01:02:39,758 - INFO - Finn is checking for new messages
+2025-07-29 01:02:39,761 - INFO - Finn received world message: {'type': 'room', 'content': {'name': 'Village Tavern', 'description': "The village's official meeting place.", 'actors': {'Agnes': {'name': 'Agnes', 'description': 'widowed herbalist with sharp eyes and sharper words', 'status': 'alive'}, 'Tobias': {'name': 'Tobias', 'description': 'young archivist with ink-stained fingers', 'status': 'alive'}, 'Briala': {'name': 'Briala', 'description': 'tends the chapel with steady hands and a gentle voice', 'status': 'alive'}, 'Joren': {'name': 'Joren', 'description': 'scarred lumberjack with a watchful gaze', 'status': 'alive'}, 'Elsbeth': {'name': 'Elsbeth', 'description': 'draped in foreign cloth and secrets', 'status': 'alive'}}}}
+2025-07-29 01:02:39,763 - INFO - Finn received world message: {'type': 'context', 'content': {'role': 'user', 'content': 'Finn has entered the Village Tavern!'}}
+2025-07-29 01:02:39,763 - INFO - Finn received world message: {'type': 'room', 'content': {'name': 'Village Tavern', 'description': "The village's official meeting place.", 'actors': {'Agnes': {'name': 'Agnes', 'description': 'widowed herbalist with sharp eyes and sharper words', 'status': 'alive'}, 'Tobias': {'name': 'Tobias', 'description': 'young archivist with ink-stained fingers', 'status': 'alive'}, 'Briala': {'name': 'Briala', 'description': 'tends the chapel with steady hands and a gentle voice', 'status': 'alive'}, 'Joren': {'name': 'Joren', 'description': 'scarred lumberjack with a watchful gaze', 'status': 'alive'}, 'Elsbeth': {'name': 'Elsbeth', 'description': 'draped in foreign cloth and secrets', 'status': 'alive'}, 'Finn': {'name': 'Finn', 'description': 'carries too many knives and tales', 'status': 'alive'}}}}
+2025-07-29 01:02:41,763 - INFO - Finn is checking for new messages
+2025-07-29 01:02:41,764 - INFO - Put to sleep!
+2025-07-29 01:02:41,767 - INFO - Finn received world message: {'type': 'sleep'}
+2025-07-29 01:02:41,767 - INFO - Received role: seer
+2025-07-29 01:02:41,767 - INFO - Finn received world message: {'type': 'role', 'content': 'seer'}
+2025-07-29 01:02:44,767 - INFO - Finn is checking for new messages
+2025-07-29 01:02:47,768 - INFO - Finn is checking for new messages
+2025-07-29 01:02:52,768 - INFO - Finn is checking for new messages
+2025-07-29 01:02:55,768 - INFO - Finn is checking for new messages
+2025-07-29 01:02:58,769 - INFO - Finn is checking for new messages
+2025-07-29 01:03:03,769 - INFO - Finn is checking for new messages
+2025-07-29 01:03:03,769 - INFO - Finn received world message: {'type': 'context', 'content': {'role': 'system', 'content': 'Finn has been killed!\n\tRole: seer.'}}

@@ -4,9 +4,10 @@ from pydantic import BaseModel
 
 API_PATH = "api.json"
 
-class GPTMessage(BaseModel):
-    role: str
-    content: str
+class ActionMessage(BaseModel):
+    action: str
+    content: str | None
+    target: str | None
 
 # TODO: graceful exit on bad api.json file
 class LLM:
@@ -21,22 +22,30 @@ class LLM:
         model (Optional[str]): the name of the model to query
         api_key (Optional[str]): the key for the connection
     """
-    def __init__(self, model: str = None, api_key: str = None):
+    def __init__(self, cloud = False):
 
-        if not model or not api_key:
+        self.cloud = cloud
+
+        if cloud:
             json_file = open(API_PATH)
             api = json.load(json_file)
             json_file.close()
-        else:
-            api = {"model": model, "key": api_key}
 
-        self.client = OpenAI(
-            api_key=api["key"]
-        )
-        self.model = api["model"]
+            self.client = OpenAI(
+                api_key=api["key"]
+            )
+            self.model = api["model"]
+        else:
+            self.client = OpenAI(
+            base_url = 'http://localhost:11434/v1',
+            api_key='ollama'
+            )
+            self.model = "dolphin3:8b"
+
+
 
     # TODO: not dict, but Response return
-    def prompt(self, message: str | GPTMessage | list[GPTMessage], json=False) -> dict:
+    def prompt(self, message: str | dict | list[dict], enforce_action = False) -> dict:
         """
         Prompts the LLM.
 
@@ -44,19 +53,32 @@ class LLM:
             message (GPTMessage | list[GPTMessage]): context/message to send to LLM
             json (bool): forces JSON output, default False
         """
-        if json:
-            response = self.client.responses.create(
-                model = self.model,
-                input=message,
-                text = {"format": {"type": "json_object"}}
-            )
-        else:
-            response = self.client.responses.create(
-                model = self.model,
-                input=message
-            )
 
-        return response
+        try:
+
+            if self.cloud and enforce_action:
+                response = self.client.chat.completions.create(
+                    model = self.model,
+                    messages=message,
+                    text = {"format": {"type": "json_object"}}
+                )
+            elif enforce_action:
+                response = self.client.chat.completions.parse(
+                    model = self.model,
+                    messages=message,
+                    response_format=ActionMessage
+                )
+            else:
+                response = self.client.chat.completions.create(
+                    model = self.model,
+                    messages=message
+                )
+
+            return response
+        except Exception as e:
+            print(f"{e}\nmessage = {message}")
+
+        return None
 
 if __name__ == "__main__":
     llm = LLM()
