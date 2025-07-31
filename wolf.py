@@ -10,8 +10,16 @@ from llm import LLM
 
 
 NPCS_PATH = "npcs.csv"
+CLOUD = True
 
 if __name__ == "__main__":
+
+    if CLOUD:
+        sys_message_file = "npc_system_message_advanced"
+        turn_based = False
+    else:
+        sys_message_file = "npc_system_message"
+        turn_based = True
 
     player_list = []
 
@@ -21,10 +29,12 @@ if __name__ == "__main__":
 
     # create and start server
     parent_conn, child_conn = Pipe()
-    world = WolfWorld(child_conn)
+    world = WolfWorld(child_conn, turn_based)
     world.start()
 
-    llm = LLM(cloud = True)
+    llm = LLM(cloud = CLOUD)
+
+
 
     world.log("Spawning bots...")
     for npc in npc_list:
@@ -35,15 +45,12 @@ if __name__ == "__main__":
         else:
             npc["can_speak"] = False
 
-        bot_player= WolfNPC(npc["name"], npc["personality"], npc["goal"], npc["description"], npc["can_speak"], npc["gender"], llm)
+        bot_player= WolfNPC(npc["name"], npc["personality"], npc["goal"], npc["description"], npc["can_speak"], npc["gender"], llm, turn_based, sys_message_file)
         bot_player.start()
         player_list.append(bot_player)
 
         #time.sleep(random.randint(5,60))
 
-
-
-    world.log("Done spawning bots, CLI free.")
 
 
     while True:

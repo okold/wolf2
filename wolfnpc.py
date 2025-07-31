@@ -17,10 +17,10 @@ from colorama import Fore, Style
 
 class WolfNPC(NPC):
 
-    def __init__(self, name, personality, goal, description, can_speak, gender, llm=None):
-        super().__init__(name, personality, goal, description, can_speak, gender, llm=llm)
+    def __init__(self, name, personality, goal, description, can_speak, gender, llm=None, turn_based = False, sys_message_file = "npc_system_message"):
+        super().__init__(name, personality, goal, description, can_speak, gender, llm, turn_based)
 
-        with open('game/npc_system_message.txt', 'r', encoding='utf-8') as file:
+        with open(f'game/{sys_message_file}.txt', 'r', encoding='utf-8') as file:
             self.SYSTEM_MESSAGE = file.read()
 
     def character_sheet(self) -> str:

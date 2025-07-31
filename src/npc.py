@@ -89,7 +89,7 @@ class NPC(Actor):
     You may only do one action at a time.
     """
 
-    def __init__(self, name, personality, goal, description, can_speak, gender, llm=None):
+    def __init__(self, name, personality, goal, description, can_speak, gender, llm=None, turn_based=False):
         super().__init__(name, personality, goal, description, can_speak=can_speak, gender=gender)
         if not llm:
             self.llm = LLM()
@@ -106,7 +106,14 @@ class NPC(Actor):
 
         timestamp = datetime.now()
         self.logger = create_npc_logger(name, timestamp)
-        self.is_awake = False
+        
+        self.turn_based = turn_based
+
+        self.has_turn = False
+
+        # REALTIME THINGS
+        self.is_awake = False   # start npcs asleep
+        self.new_messages = False # used in real-time processing
 
     def update_summary_message(self, new_summary_message : str):
         self.context.summary_message = new_summary_message
@@ -115,6 +122,48 @@ class NPC(Actor):
         self.update_summary_message("")
         self.context.summarize()
 
+    def act(self):
+        prompt = [
+            {"role": "developer", "content": self.SYSTEM_MESSAGE + "\n" + self.character_sheet() + "\nCurrent Summary:\n" + self.context.summary}
+        ] + self.context.context
+
+        self.logger.info(f"{self.name} sending to LLM. Prompt:\n{prompt}")
+        response = self.llm.prompt(prompt, enforce_action=True)
+        
+        self.logger.info(f"{self.name} received LLM response:\n{response}")
+        output_str = response.choices[0].message.content
+
+        try:
+            output = json.loads(output_str)
+
+            if output == self.last_output and output["action"] != 'listen':
+                self.logger.warning(f"{self.name} is being repetitive.")
+            else:
+                # to ensure only outputs with good hygeine
+                if isinstance(output, dict):
+                    self.context.append({"role": "assistant", "content": output_str})
+
+            #if output["action"] == "leave":
+            #    self.logger.info(f"{self.name} decided to leave!")
+            #    break
+
+            if output["action"] == 'listen':
+                self.logger.info(f"{self.name} decided to listen!")
+
+            elif output["action"] == "speak" and not self.can_speak:
+                self.logger.warning(f"{self.name} attempted to speak when it couldn't!")
+
+            else:
+                output["room"] = self.room_info["name"]
+                self.logger.info(f"{self.name} sent to world: {output}")
+                self.conn.send(output)
+                
+
+        except Exception as e:
+            self.logger.warning(f"{e}\nresponse: {response}")
+
+
+
     def run(self):
         self.connect()
         
@@ -122,7 +171,7 @@ class NPC(Actor):
 
         # main loop
         while True:
-            new_messages = False
+            self.new_messages = False
             try:
                 self.logger.info(f"{self.name} is checking for new messages")
                 while self.conn.poll():
@@ -130,12 +179,13 @@ class NPC(Actor):
 
                     if msg["type"] == "context":
                         self.context.append(msg["content"])
-                        new_messages = True
+                        self.new_messages = True
                     elif msg["type"] == "summarize":
                         self.context.summarize()
                         self.logger.info(f"Forced a summary!")
                     elif msg["type"] == "room":
                         self.room_info = msg["content"]
+                        self.logger.info(f"Updated room info!")
                     elif msg["type"] == "role":
                         self.role = msg["content"]
                         self.logger.info(f"Received role: {self.role}")
@@ -151,64 +201,28 @@ class NPC(Actor):
                     elif msg["type"] == "vote_targets":
                         self.vote_targets = msg["content"]
                         self.logger.info(f"Received vote targets: {self.vote_targets}")
+                    elif msg["type"] == "act_token":
+                        self.has_turn = True
+                        self.logger.info(f"Recieved act token!")
 
                     self.logger.info(f"{self.name} received world message: {msg}")
+
+                if not self.turn_based and self.is_awake and (self.new_messages):
+                    self.act()
+                    self.new_messages = False
+                    time.sleep(random.randint(self.WAIT_MIN, self.WAIT_MAX)) 
+
+                if self.turn_based and self.has_turn:
+                    self.act()
+                    self.has_turn = False
+
 
             except EOFError:
                 break
             except ConnectionResetError:
                 break
 
-            if self.is_awake and (new_messages or quiet_round_passed):
-                prompt = [
-                    {"role": "developer", "content": self.SYSTEM_MESSAGE + "\n" + self.character_sheet() + "\n" + self.context.summary}
-                ] + self.context.context
 
-                self.logger.info(f"{self.name} sending to LLM. Prompt:\n{prompt}")
-                response = self.llm.prompt(prompt, enforce_action=True)
-                
-                self.logger.info(f"{self.name} received LLM response:\n{response}")
-                output_str = response.choices[0].message.content
-
-                try:
-                    output = json.loads(output_str)
-
-                    if output == self.last_output and output["action"] != 'listen':
-                        self.logger.warning(f"{self.name} is being repetitive.")
-                    else:
-                        # to ensure only outputs with good hygeine
-                        if isinstance(output, dict):
-                            self.context.append({"role": "assistant", "content": output_str})
-
-
-                    if output["action"] == "leave":
-                        self.logger.info(f"{self.name} decided to leave!")
-                        break
-
-                    elif output["action"] == 'listen':
-                        self.logger.info(f"{self.name} decided to listen!")
-
-                    elif output["action"] == "speak" and not self.can_speak:
-                        self.logger.warning(f"{self.name} attempted to speak when it couldn't!")
-
-                    else:
-                        output["room"] = self.room_info["name"]
-                        self.logger.info(f"{self.name} sent to world: {output}")
-                        self.conn.send(output)
-                        
-
-                except Exception as e:
-                    self.logger.warning(f"{e}\nresponse: {response}")
-                
-                quiet_round_passed = False
-            
-            else:
-                #self.context.append({"role": "developer", "content": "It's quiet."})
-                #self.logger.info("Added quiet message to context.")
-                quiet_round_passed = True
-
-            # to keep things from going too fast
-            time.sleep(random.randint(self.WAIT_MIN, self.WAIT_MAX)) 
 
         try:
             self.conn.close()

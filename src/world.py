@@ -10,8 +10,42 @@ from colorama import Style
 from datetime import datetime
 from npc import create_npc_logger
 from speech import SpeakingContest
+from collections import Counter
 
 ADDRESS = ("localhost", 6000) #TODO: something about this
+
+def resolve_majority_vote(voters: dict, tiebreaker = False) -> str | None:
+    """
+    Given a dictionary of votes {voter: target}, returns the target with majority.
+    If there's no clear majority (tie or no votes), returns None.
+    """
+
+    if not voters:
+        return None
+    
+    if len(voters) == 1:
+        for actor in voters:
+            return voters[actor]
+    
+    #self.log(votes)
+
+    vote_counts = Counter(voters.values())
+    most_common = vote_counts.most_common(2)
+
+    # Check if there's a tie or no clear majority
+    if len(most_common) == 1:
+        return most_common[0][0]  # Only one person voted
+    elif most_common[0][1] > most_common[1][1]:
+        return most_common[0][0]  # Clear majority
+    elif tiebreaker:
+        if most_common[0][0] == None:
+            return most_common[1][0]
+        elif most_common[1][0] == None:
+            return most_common[0][0]
+        else:
+            return random.choice([most_common[0][0], most_common[1][0]])
+    else:
+        return None
 
 class World(Process):
     """

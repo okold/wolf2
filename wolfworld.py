@@ -1,5 +1,5 @@
 from multiprocessing.connection import Listener, Pipe, Connection
-from collections import Counter
+
 import random
 import time
 import sys
@@ -9,44 +9,11 @@ import csv
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 from npc import NPC
-from world import World
+from world import World, resolve_majority_vote
 from room import Room
 from llm import LLM
 from speech import SpeakingContest
 from colorama import Fore, Style
-
-def resolve_majority_vote(voters: dict, tiebreaker = False) -> str | None:
-    """
-    Given a dictionary of votes {voter: target}, returns the target with majority.
-    If there's no clear majority (tie or no votes), returns None.
-    """
-
-    if not voters:
-        return None
-    
-    if len(voters) == 1:
-        for actor in voters:
-            return voters[actor]
-    
-    #self.log(votes)
-
-    vote_counts = Counter(voters.values())
-    most_common = vote_counts.most_common(2)
-
-    # Check if there's a tie or no clear majority
-    if len(most_common) == 1:
-        return most_common[0][0]  # Only one person voted
-    elif most_common[0][1] > most_common[1][1]:
-        return most_common[0][0]  # Clear majority
-    elif tiebreaker:
-        if most_common[0][0] == None:
-            return most_common[1][0]
-        elif most_common[1][0] == None:
-            return most_common[0][0]
-        else:
-            return random.choice([most_common[0][0], most_common[1][0]])
-    else:
-        return None
 
 def role_colour(role: str):
     if role == "werewolf":
@@ -71,7 +38,7 @@ class WolfWorld(World):
     NUM_WOLVES = 2
     PRINT_COOLDOWN = 3
 
-    def __init__(self, cli: Connection = None):
+    def __init__(self, cli: Connection = None, turn_based = False):
 
         self.day_room = Room("Village Tavern", "The village's official meeting place.")
         self.night_room = Room("Hideout", "A cave on the outskirts of the village.")
@@ -87,7 +54,8 @@ class WolfWorld(World):
         self.voters = {}
         self.seer_targets = {}
         self.valid_vote_targets = []    
-        self.end = False  
+        self.end = False
+        self.turn_based = turn_based
 
     def print_loop(self):
         """
@@ -201,8 +169,6 @@ class WolfWorld(World):
 
         self.phase_header()
 
-
-
         if vote_result:
             day_message = f"You have met at the village tavern to discuss {vote_result}'s death.\n\t{wolf_count} werewolves remain.\n\t{villager_count} villagers remain."
         else:
@@ -255,51 +221,10 @@ class WolfWorld(World):
         self.reset_timer()
         self.awaken_room(self.current_room.name)
 
+    def turn_based_loop(self):
+        pass
 
-
-    def run(self):
-        self.connection_loop.start()
-        self.print_loop.start()
-
-        while True:
-            with self.actors_lock:
-                if len(self.actors) == self.PLAYER_COUNT:
-                    self.accept_connections = False
-                    break
-            time.sleep(1) # TODO: variable here
-
-
-        roles = ["werewolf"] * self.NUM_WOLVES + ["villager"] * (self.PLAYER_COUNT - self.NUM_WOLVES - 1) + ["seer"]
-        random.shuffle(roles)
-
-        for actor in self.actors:
-            self.send_sleep_message(actor)
-
-        self.seer_targets = {}
-
-        roles_message = "Player roles:"
-
-        for actor, role in zip(self.actors, roles):
-            self.actors[actor]["role"] = role
-            self.send_to_actor(actor, role, "role")
-            colour = role_colour(role)
-            roles_message += f"\n{actor} is a " + colour + role + Style.RESET_ALL
-
-            if role != "seer":
-                self.seer_targets[actor] = role
-
-        self.log(roles_message)
-        self.phase_header()
-
-        for actor in self.actors:
-            if self.actors[actor]["role"] == "werewolf":
-                self.move_actor_to_room(actor, self.night_room.name, verbose=False)
-
-        self.reset_votes()
-        self.send_to_room(self.night_room.name, {"role": "system", "content": "You have arrived at the hideout to plot your first hunt."})
-        self.awaken_room(self.night_room.name)            
-
-        
+    def real_time_loop(self):
         self.phase_start_time = time.time()
         self.last_notify = self.phase_start_time
         phase_duration = self.NIGHT_PHASE_LENGTH
@@ -369,5 +294,53 @@ class WolfWorld(World):
             time.sleep(self.WAIT_TIME)
             # end main loop
             # TODO: make this smaller lol
+
+    def run(self):
+        self.connection_loop.start()
+        self.print_loop.start()
+
+        while True:
+            with self.actors_lock:
+                if len(self.actors) == self.PLAYER_COUNT:
+                    self.accept_connections = False
+                    break
+            time.sleep(1) # TODO: variable here
+
+
+        roles = ["werewolf"] * self.NUM_WOLVES + ["villager"] * (self.PLAYER_COUNT - self.NUM_WOLVES - 1) + ["seer"]
+        random.shuffle(roles)
+
+        for actor in self.actors:
+            self.send_sleep_message(actor)
+
+        self.seer_targets = {}
+
+        roles_message = "Player roles:"
+
+        for actor, role in zip(self.actors, roles):
+            self.actors[actor]["role"] = role
+            self.send_to_actor(actor, role, "role")
+            colour = role_colour(role)
+            roles_message += f"\n{actor} is a " + colour + role + Style.RESET_ALL
+
+            if role != "seer":
+                self.seer_targets[actor] = role
+
+        self.log(roles_message)
+        self.phase_header()
+
+        for actor in self.actors:
+            if self.actors[actor]["role"] == "werewolf":
+                self.move_actor_to_room(actor, self.night_room.name, verbose=False)
+
+        self.reset_votes()
+        self.send_to_room(self.night_room.name, {"role": "system", "content": "You have arrived at the hideout to plot your first hunt."})
+        self.awaken_room(self.night_room.name)            
+
+        if self.turn_based:
+            self.turn_based_loop()
+        else:
+            self.real_time_loop()
+        
 
         self.print_loop.join()
