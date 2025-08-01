@@ -7,11 +7,12 @@ import math
 import os
 import csv
 
+
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 from npc import NPC
 from world import World
 from room import Room
-from llm import LLM
+from llm import BasicActionMessage, AdvancedActionMessage
 from speech import SpeakingContest
 from colorama import Fore, Style
 
@@ -34,16 +35,11 @@ class WolfNPC(NPC):
         Game phase: {self.phase}
         Your personality: {self.personality}
         Your gender: {self.gender}
-        Your speech capability: {self.can_speak}
 
         You are currently in a room named: {self.room_info['name']}
         {self.room_info['description']}
         
-        The actors in the room are:
         """
-
-        for actor in self.room_info["actors"]:
-            desc += f" {actor}: {self.description} ({self.room_info['actors'][actor]['status']})"
 
         desc += f"""Valid vote targets are:
         {self.vote_targets}

@@ -9,26 +9,19 @@ The game has two phases:
     - Night: Werewolves are active, and vote on their next victim in a private room.
     - Day: Everyone is active, and vote on who to lynch.
 
-The current phase lasts until the timer runs out, or until a majority vote has passed.
-The role of any killed player is revealed.
+Phases last for a number of rounds, where each player will have an opportunity to act.
+A random tiebreaker will be chosen (if possible) at the end of a phase.
 
 The werewolves win if they outnumber villagers.
 The villagers win if all werewolves have been killed.
 
-Outputs are in JSON format.
-Example: { "action": <action_name>, "content": <varies_by_action>, "target": <name> }
+Return valid JSON format to act:
+{ "speech": <content>, "vote": <target_name>}
+    Example: { "speech": "Who should we hunt tonight?", "vote": nil }
+    Example: { "speech": nil, "vote": "Bandit" }
 
-Available actions are:
-    - speak: whatever you say will be broadcast to others in the room.
-    Example: { "action": "speak", "content": "I am saying something."}
-
-    - vote: vote on a player to kill (night) or lynch (day)
-    Example: { "action": "vote", "target": "Bandit" }
-
+You may speak without voting, and vote without speaking.
 Stay in character.
-Avoid repeating questions already asked by others.
-Do not respond to yourself.
-When speaking, limit yourself to one sentence.
+Keep dialogue brief.
 You may only do one action at a time.
-Your output MUST be one of the above JSON formats.
-You must vote during the phase, even if alone.
+Only vote if you intend to lynch (at day) or hunt (at night) the target.

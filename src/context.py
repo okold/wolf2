@@ -103,9 +103,9 @@ class SummaryContext(Context):
         Summarizes the context using the LLM.
         """
     
-        long_term_memory = [{"role": "developer", "content": ""}]
+        long_term_memory = [{"role": "system", "content": ""}]
 
-        prompt = long_term_memory + self.context + [{"role": "developer", "content": self.summary_message}]
+        prompt = long_term_memory + self.context + [{"role": "system", "content": self.summary_message}]
         
         response = self.llm.prompt(prompt)
         self.summary = response.choices[0].message.content

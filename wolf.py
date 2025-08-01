@@ -10,9 +10,13 @@ from llm import LLM
 
 
 NPCS_PATH = "npcs.csv"
-CLOUD = True
+CLOUD = False
 
 if __name__ == "__main__":
+
+    if "cloud" in sys.argv:
+        CLOUD = True
+
 
     if CLOUD:
         sys_message_file = "npc_system_message_advanced"
@@ -35,8 +39,6 @@ if __name__ == "__main__":
     llm = LLM(cloud = CLOUD)
 
 
-
-    world.log("Spawning bots...")
     for npc in npc_list:
         #self.log(npc)
         
@@ -53,9 +55,5 @@ if __name__ == "__main__":
 
 
 
-    while True:
-        msg = input()
-        parent_conn.send(msg)
-        if msg == "quit" or msg == "exit":
-            break
+    world.join()
 

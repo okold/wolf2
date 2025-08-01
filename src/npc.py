@@ -1,6 +1,6 @@
 from actor import Actor
 from context import SummaryContext
-from llm import LLM
+from llm import LLM, BasicActionMessage, AdvancedActionMessage
 import time
 import random
 import json
@@ -43,9 +43,6 @@ class NPC(Actor):
         goal (str): a description of the actor's primary goal
         status (Optional[str]): dead/alive status of the actor
     """
-
-    WAIT_MIN_ABS = 5
-    WAIT_MAX_ABS = 15
 
     WAIT_MIN = 3
     WAIT_MAX = 8
@@ -109,11 +106,18 @@ class NPC(Actor):
         
         self.turn_based = turn_based
 
+        if turn_based:
+            self.action_model = BasicActionMessage
+        else:
+            self.action_model = AdvancedActionMessage
+
         self.has_turn = False
 
         # REALTIME THINGS
         self.is_awake = False   # start npcs asleep
         self.new_messages = False # used in real-time processing
+
+
 
     def update_summary_message(self, new_summary_message : str):
         self.context.summary_message = new_summary_message
@@ -124,11 +128,11 @@ class NPC(Actor):
 
     def act(self):
         prompt = [
-            {"role": "developer", "content": self.SYSTEM_MESSAGE + "\n" + self.character_sheet() + "\nCurrent Summary:\n" + self.context.summary}
+            {"role": "system", "content": self.SYSTEM_MESSAGE + "\n" + self.character_sheet() + "\nCurrent Summary:\n" + self.context.summary}
         ] + self.context.context
 
         self.logger.info(f"{self.name} sending to LLM. Prompt:\n{prompt}")
-        response = self.llm.prompt(prompt, enforce_action=True)
+        response = self.llm.prompt(prompt, enforce_model=self.action_model)
         
         self.logger.info(f"{self.name} received LLM response:\n{response}")
         output_str = response.choices[0].message.content
@@ -136,28 +140,11 @@ class NPC(Actor):
         try:
             output = json.loads(output_str)
 
-            if output == self.last_output and output["action"] != 'listen':
-                self.logger.warning(f"{self.name} is being repetitive.")
-            else:
-                # to ensure only outputs with good hygeine
-                if isinstance(output, dict):
-                    self.context.append({"role": "assistant", "content": output_str})
+            if isinstance(output, dict):
+                self.context.append({"role": "assistant", "content": output_str})
 
-            #if output["action"] == "leave":
-            #    self.logger.info(f"{self.name} decided to leave!")
-            #    break
-
-            if output["action"] == 'listen':
-                self.logger.info(f"{self.name} decided to listen!")
-
-            elif output["action"] == "speak" and not self.can_speak:
-                self.logger.warning(f"{self.name} attempted to speak when it couldn't!")
-
-            else:
-                output["room"] = self.room_info["name"]
-                self.logger.info(f"{self.name} sent to world: {output}")
-                self.conn.send(output)
-                
+            self.logger.info(f"{self.name} sent to world: {output}")
+            self.conn.send(output)
 
         except Exception as e:
             self.logger.warning(f"{e}\nresponse: {response}")
@@ -173,8 +160,8 @@ class NPC(Actor):
         while True:
             self.new_messages = False
             try:
-                self.logger.info(f"{self.name} is checking for new messages")
                 while self.conn.poll():
+                    self.logger.info(f"Waiting on new messages.")
                     msg = self.conn.recv()
 
                     if msg["type"] == "context":
@@ -207,22 +194,23 @@ class NPC(Actor):
 
                     self.logger.info(f"{self.name} received world message: {msg}")
 
-                if not self.turn_based and self.is_awake and (self.new_messages):
+                if not self.turn_based and self.is_awake and (quiet_round_passed or self.new_messages):
                     self.act()
                     self.new_messages = False
-                    time.sleep(random.randint(self.WAIT_MIN, self.WAIT_MAX)) 
+                    quiet_round_passed = False
+                elif not self.turn_based:
+                    quiet_round_passed = True
 
                 if self.turn_based and self.has_turn:
                     self.act()
                     self.has_turn = False
-
 
             except EOFError:
                 break
             except ConnectionResetError:
                 break
 
-
+            time.sleep(random.randint(self.WAIT_MIN, self.WAIT_MAX)) 
 
         try:
             self.conn.close()

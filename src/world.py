@@ -3,8 +3,10 @@ from threading import Thread, Lock
 from queue import Queue
 from multiprocessing.connection import Listener, Pipe, Connection
 import time
+import math
 from room import Room
 import random
+from abc import ABC, abstractmethod
 from llm import LLM
 from colorama import Style
 from datetime import datetime
@@ -47,7 +49,7 @@ def resolve_majority_vote(voters: dict, tiebreaker = False) -> str | None:
     else:
         return None
 
-class World(Process):
+class World(Process, ABC):
     """
     The main server process for a game.
 
@@ -60,7 +62,7 @@ class World(Process):
     WAIT_TIME = 1 # wait period between "rounds"
     PRINT_COOLDOWN = 1 # just to make reading it less of a nightmare
 
-    def __init__(self, llm: LLM = None, cli: Connection = None, default_room: Room = None):
+    def __init__(self, llm: LLM = None, cli: Connection = None, default_room: Room = None, turn_based = False):
         super().__init__()
 
         self.llm = llm                      # LLM information
@@ -93,6 +95,12 @@ class World(Process):
         self.accept_connections = True
         self.connection_loop = Thread(target=self.new_connection_loop, daemon=True)
         self.print_loop = Thread(target=self.print_loop, daemon=True)
+
+        self.valid_vote_targets = []
+        self.voters = {}
+
+        self.end = False
+        self.turn_based = turn_based
 
         #self.log(f"Current Room: {self.default_room.name}")
         #self.log(self.default_room.description)
@@ -129,18 +137,21 @@ class World(Process):
         """
         while True:
             try:
-                message = self.print_queue.get()
+                if self.print_queue.empty() and self.end:
+                    break
+                else:
+                    message = self.print_queue.get()
 
-                if isinstance(message, dict):
-                    try:
-                        if message["role"] == "user":
-                            message = message["content"]
-                        elif message["role"] == "system":
-                            message = f"\033[1mSYSTEM:\033[0m {message['content']}"
-                    except:
-                        pass
+                    if isinstance(message, dict):
+                        try:
+                            if message["role"] == "user":
+                                message = message["content"]
+                            elif message["role"] == "system":
+                                message = f"\033[1mSYSTEM:\033[0m {message['content']}"
+                        except:
+                            pass
 
-                print(message)
+                    print(message)
 
             except Exception as e:
                 self.logger.warning(e)
@@ -205,19 +216,19 @@ class World(Process):
         except Exception as e:
             self.logger.error(f"Failed to send message to actor {actor}: {e}")
 
+    def send_act_token(self, actor: str):
+        try:
+            with self.actors_lock:
+                self.actors[actor]["conn"].send({"type": "act_token"})
+        except Exception as e:
+            self.logger.error(f"Failed to send act token to actor {actor}: {e}")
+
     def send_summary_message(self, actor: str):
         try:
             with self.actors_lock:
                 self.actors[actor]["conn"].send({"type": "summarize"})
         except Exception as e:
-            self.logger.error(f"Failed to send message to actor {actor}: {e}")
-
-    def send_phase_message(self, actor: str, phase : str):
-        try:
-            with self.actors_lock:
-                self.actors[actor]["conn"].send({"type": "phase", "content": phase})
-        except Exception as e:
-            self.logger.error(f"Failed to send message to actor {actor}: {e}")
+            self.logger.error(f"Failed to send summary message to actor {actor}: {e}")
 
     def send_sleep_message(self, actor: str):
         try:
@@ -297,6 +308,18 @@ class World(Process):
             self.send_to_room(room, self.rooms[room].state(), "room", verbose=False)
 
     # NOTE: this is NOT THREAD SAFE, and is intended to be called already within a lock
+    def speak(self, actor: str, content: str, colour = None):
+        output_plain = f"{actor} says, \"{content}\""
+        self.send_to_room(self.actors[actor]["room"], {"role": "user", "content": output_plain}, verbose=False)
+
+        if colour:
+            output_fancy = colour + actor + Style.RESET_ALL + f" says, \"{content}\""
+        else:
+            output_fancy = output_plain
+        
+        self.log(output_fancy)
+
+    # NOTE: this is NOT THREAD SAFE, and is intended to be called already within a lock
     def yell(self, actor: str, content: str, colour = None):
         """
         Broadcasts a message to everyone in the format:
@@ -350,29 +373,6 @@ class World(Process):
 
         self.flagged_actors.append((actor, reason))
 
-    # NOTE: this is NOT THREAD SAFE, and is intended to be called already within a lock
-    def shoot(self, actor: str, target: str):
-        """
-        Lets the given actor try to shoot the target. 50% chance of success.
-
-        Args:
-            actor (str): the name of the shooting actor
-            target (str): the name of the target
-        """
-        try:
-            roll = random.randint(1,20)
-
-            if roll >= 10:
-                output = f"BANG! {actor} has shot at {target}, and hit!"
-                self.send_to_room(self.actors[actor]["room"], {"role": "user", "content": output})
-                self.remove(target, "killed")
-            else:
-                output = f"BANG! {actor} has shot at {target}, and missed!"
-                self.send_to_room(self.actors[actor]["room"], {"role": "user", "content": output})
-            
-        except Exception as e:
-            self.logger.warning(e)
-
     def clean_flagged_actors(self, verbose = True):
         """
         Removes all actors in the flagged_actors list.
@@ -404,8 +404,6 @@ class World(Process):
 
             self.flagged_actors = []
 
-    
-
     def gesture(self, actor: str, content: str):
         """
         Allows an actor to gesture in the format:
@@ -420,67 +418,61 @@ class World(Process):
         """
         self.send_to_room(self.actors[actor]["room"], {"role": "user", "content": f"{actor} {content}."})
 
+
+    def vote(self, actor: str, target: str, validate = True, verbose = True):
+        """
+        
+        """
+        if target in self.valid_vote_targets or not validate:
+            self.voters[actor] = target
+
+            if verbose:
+                message = f"{actor} has voted for {target}! The current votes are:"
+                
+                for voter in self.voters:
+                    if self.voters[voter] != None:
+                        message += f"\n\t{voter}: {self.voters[voter]}"
+
+                self.send_to_room(self.actors[actor]["room"],
+                            {"role": "system", "content": message})
+
+    def reset_votes(self):
+        """
+        Empties the valid_vote_targets lits and voters dict
+        """
+        self.valid_vote_targets = []
+        self.voters = {}
+
+    @abstractmethod
+    def setup(self):
+        pass
+
+    @abstractmethod
+    def turn_based_loop(self):
+        pass
+
+    @abstractmethod
+    def real_time_loop(self):
+        pass
+
+    @abstractmethod
+    def cleanup(self):
+        pass
+    
     def run(self):
         self.connection_loop.start()
-
-        
         self.print_loop.start()
 
-        # main loop
-        while True:
+        self.setup()          
 
-            # logic for who gets to successfully speak this round
-            speak_contest = SpeakingContest()
+        if self.turn_based:
+            self.turn_based_loop()
+        else:
+            self.real_time_loop()
+        
+        self.cleanup()
 
-            # check for cli messages
-            msg = self.try_recv(self.cli)
-            if msg == "quit" or msg == "exit":
-                break
-
-            new_messages = []
-
-            # check each actor for messages & forward
-            with self.actors_lock:
-                for actor in self.actors:
-                    msg = self.try_recv(self.actors[actor]["conn"])
-                    if not msg:
-                        pass
-                    else:
-                        msg["actor"] = actor
-                        new_messages.append(msg)
-
-            for msg in new_messages:
-                if msg["room"] == self.current_room["name"]:
-                    if msg["action"] == "speak" and self.actors[msg["actor"]]:
-                        speak_contest.add_speaker(msg["actor"], msg["content"], self.actors[msg["actor"]]["charisma"], msg["room"])
-                    if "speech" in msg and msg["action"] != "speak" and self.actors[msg["actor"]]["can_speak"]:
-                        speak_contest.add_speaker(msg["actor"], msg["speech"], self.actors[msg["actor"]]["charisma"])
-                    if msg["action"] == "yell":
-                        self.yell(msg["actor"], msg["content"])
-                    if msg["action"] == "gesture":
-                        self.gesture(msg["actor"], msg["content"])
-                    if "gesture" in msg and msg["action"] != "gesture":
-                        self.gesture(msg["actor"], msg["gesture"])
-                    if msg["action"] == "give":
-                        self.give(msg["actor"], msg["content"], msg["target"])
-                    if msg["action"] == "leave":
-                        self.remove(msg["actor"])
-                    if msg["action"] == "shoot":
-                        self.shoot(msg["actor"], msg["target"])
-
-            speak_output, _, speak_actor, interrupted_actors = speak_contest.resolve()
-
-            if speak_output:
-                room = self.actors[speak_actor]["room"]
-                self.send_to_room(room, speak_output)
-                for actor in interrupted_actors:
-                    self.send_to_room(self.actors[speak_actor]["room"], {"role": "user", "content": f"{actor} was interrupted by {speak_actor}!"}, verbose=False)
-            
-            self.clean_flagged_actors()    
-            
-            time.sleep(self.WAIT_TIME)
-
-        self.kill()
+        self.print_loop.join()
     
 if __name__ == "__main__":
     parent_conn, child_conn = Pipe()

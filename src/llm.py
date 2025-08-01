@@ -4,10 +4,15 @@ from pydantic import BaseModel
 
 API_PATH = "api.json"
 
-class ActionMessage(BaseModel):
+class BasicActionMessage(BaseModel):
+    vote: str | None
+    speech: str | None
+
+class AdvancedActionMessage(BaseModel):
     action: str
     content: str | None
     target: str | None
+    speech: str | None
 
 # TODO: graceful exit on bad api.json file
 class LLM:
@@ -22,7 +27,7 @@ class LLM:
         model (Optional[str]): the name of the model to query
         api_key (Optional[str]): the key for the connection
     """
-    def __init__(self, cloud = False):
+    def __init__(self, cloud = False, model = "dolphin3:8b"):
 
         self.cloud = cloud
 
@@ -40,12 +45,12 @@ class LLM:
             base_url = 'http://localhost:11434/v1',
             api_key='ollama'
             )
-            self.model = "dolphin3:8b"
+            self.model = model
 
 
 
     # TODO: not dict, but Response return
-    def prompt(self, message: str | dict | list[dict], enforce_action = False) -> dict:
+    def prompt(self, message: str | dict | list[dict], enforce_model = None) -> dict:
         """
         Prompts the LLM.
 
@@ -55,11 +60,11 @@ class LLM:
         """
 
         try:
-            if enforce_action:
+            if enforce_model:
                 response = self.client.chat.completions.parse(
                     model = self.model,
                     messages=message,
-                    response_format=ActionMessage
+                    response_format=enforce_model
                 )
             else:
                 response = self.client.chat.completions.create(
