@@ -18,10 +18,10 @@ class WolfNPC(NPC):
         """
 
         desc = f"""YOUR CHARACTER SHEET:
-        Nme: {self.name}
+        Name: {self.name}
         Role: {self.role}
-        Phase: {self.phase}
         Personality: {self.personality}
+        Description: {self.description}
 
         You are currently in a room named: {self.room_info['name']}
         {self.room_info['description']}

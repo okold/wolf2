@@ -16,12 +16,11 @@ The werewolves win if they outnumber villagers.
 The villagers win if all werewolves have been killed.
 
 Available actions are:
-    - speak: whatever you say will be broadcast to others in the room. 
-        - If two people try to speak at once, one may be interrupted.
+    - speak: whatever you say will be broadcast to others in the room.
     Example: { "action": "speak", "content": "I am saying something."}
 
     - vote: vote on a player to kill (night) or lynch (day)
-    Example: { "action": "vote", "target": "Robin" }
+    Example: { "action": "vote", "content": "Robin" }
 
     - pass: do nothing
     Example: { "action": "pass", "content": None }

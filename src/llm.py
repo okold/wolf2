@@ -18,15 +18,7 @@ class AdvancedActionMessage(BaseModel):
 # TODO: graceful exit on bad api.json file
 class LLM:
     """
-    An interface for an LLM API. Currently only supports OpenAI. 
-    
-    Uses the Responses interface.
-
-    By default, loads the model based on info from the "api.json" file in root.
-
-    Args:
-        model (Optional[str]): the name of the model to query
-        api_key (Optional[str]): the key for the connection
+    An interface for an LLM. Can be local or openai.
     """
     def __init__(self, cloud = False, model = "dolphin3:8b"):
 
@@ -55,7 +47,7 @@ class LLM:
             message (GPTMessage | list[GPTMessage]): context/message to send to LLM
             json (bool): forces JSON output, default False
         """
-        if think and self.model not in ["deepseek-r1:8b", "deepseek-r1:14b", "qwen3:8b", "qwen3:13b"]:
+        if think and self.model not in ["deepseek-r1:8b", "deepseek-r1:14b", "qwen3:8b", "qwen3:13b", "magistral"]:
             think = False
             reasoning = False
 
@@ -77,9 +69,9 @@ class LLM:
 
             else:
                 if enforce_model:
-                    response = chat(self.model, messages=message, think=think, format=enforce_model.model_json_schema())
+                    response = chat(self.model, messages=message, think=False, format=enforce_model.model_json_schema())
                 else:
-                    response = chat(self.model, messages=message, think=think)
+                    response = chat(self.model, messages=message, think=False)
 
                 content = response.message.content
                 if think:

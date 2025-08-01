@@ -11,10 +11,13 @@ from llm import LLM
 
 NPCS_PATH = "npcs.csv"
 CLOUD = False
+SLOW = False
+SLOW_MODEL = "mistral-small3.2"
+FAST_MODEL = "dolphin3:8b"
 
 if __name__ == "__main__":
 
-    if "cloud" in sys.argv or "online" in sys.argv:
+    if "online" in sys.argv or "-o" in sys.argv:
         CLOUD = True
 
     if CLOUD:
@@ -23,6 +26,13 @@ if __name__ == "__main__":
     else:
         sys_message_file = "npc_system_message_turn_based.txt"
         turn_based = True
+
+    if "slow" in sys.argv or "-s" in sys.argv:
+        SLOW = True
+        model = SLOW_MODEL
+    else:
+        model = FAST_MODEL
+        
 
     player_list = []
 
@@ -35,7 +45,9 @@ if __name__ == "__main__":
     world = WolfWorld(child_conn, turn_based)
     world.start()
 
-    llm = LLM(cloud = CLOUD)
+
+
+    llm = LLM(model=model, cloud = CLOUD)
 
     for npc in npc_list:
         #self.log(npc)

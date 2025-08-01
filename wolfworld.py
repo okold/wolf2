@@ -40,8 +40,8 @@ class WolfWorld(World):
     NOTIFY_PERIOD = 30
 
     #turn-based mode
-    NIGHT_ROUNDS = 3
-    DAY_ROUNDS = 6
+    NIGHT_ROUNDS = 5
+    DAY_ROUNDS = 4
 
 
     def __init__(self, cli: Connection = None, turn_based = False):
@@ -104,6 +104,7 @@ class WolfWorld(World):
         while not self.end:
 
             turn_order = []
+            vote_result = None
 
             if self.phase == "night":
                 turn_order = [actor for actor in self.actors if self.actors[actor]["role"] == "werewolf"]
@@ -138,12 +139,13 @@ class WolfWorld(World):
                         self.speak(name, msg["content"], colour)
                     if msg["action"] == "vote":
                         self.vote(name, msg["content"])
+                        vote_result = self.resolve_majority_vote()
+                        if vote_result:
+                            break
                     if msg["action"] == "pass":
                         self.send_to_room(self.current_room, {"role": "user", "content": f"{name} is quiet."})
-                
-                vote_result = self.resolve_majority_vote()
 
-                if vote_result and self.phase == "night":
+                if vote_result:
                     break
             
             if not vote_result and self.phase == "night":
@@ -271,7 +273,7 @@ class WolfWorld(World):
             self.remove(vote_result, "killed")
             if vote_result in self.seer_targets: 
                 del self.seer_targets[vote_result]
-            kill_message = {"role": "system", "content": f"{vote_result} has been killed!\n\tRole: {self.actors[vote_result]['role']}."}
+            kill_message = {"role": "user", "content": f"{vote_result}, a {self.actors[vote_result]['role']}, has been killed!"}
             self.send_to_room(self.night_room, kill_message, verbose=False)
             self.send_to_room(self.day_room, kill_message)
 
@@ -329,7 +331,7 @@ class WolfWorld(World):
                 if role == "seer":
                     try:
                         target = random.choice(list(self.seer_targets.keys()))
-                        self.send_to_actor(actor, {"role": "system", "content": f"Last night, you receieved a vision! {target} is a {self.seer_targets[target]}!"})
+                        self.send_to_actor(actor, {"role": "user", "content": f"Last night, you receieved a vision! {target} is a {self.seer_targets[target]}!"})
                         self.log(role_colour("seer") + actor + Style.RESET_ALL + f" recieved {target}'s role: " + role_colour(self.seer_targets[target]) + self.seer_targets[target] + Style.RESET_ALL)
                         del self.seer_targets[target]
                     except:

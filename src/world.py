@@ -56,8 +56,7 @@ class World(Process, ABC):
         self.rooms_lock = Lock()
         self.rooms = {self.default_room.name: self.default_room}
 
-        # TODO: change this. this is bad. it works.
-        self.logger = create_logger("Game")
+        self.logger = create_logger("World")
 
         self.accept_connections = True
         self.connection_loop = Thread(target=self.new_connection_loop, daemon=True)
@@ -68,9 +67,6 @@ class World(Process, ABC):
 
         self.end = False
         self.turn_based = turn_based
-
-        #self.log(f"Current Room: {self.default_room.name}")
-        #self.log(self.default_room.description)
 
     def get_new_messages(self) -> list[dict]:
         new_messages = []
@@ -402,8 +398,10 @@ class World(Process, ABC):
                     if self.voters[voter] != None:
                         message += f"\n\t{voter}: {self.voters[voter]}"
 
+                self.logger.info(message)
                 self.send_to_room(self.actors[actor]["room"],
                             {"role": "system", "content": message})
+
 
     def resolve_majority_vote(self, tiebreaker = False) -> str | None:
         """
