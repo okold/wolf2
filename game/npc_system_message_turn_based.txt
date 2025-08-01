@@ -15,13 +15,18 @@ A random tiebreaker will be chosen (if possible) at the end of a phase.
 The werewolves win if they outnumber villagers.
 The villagers win if all werewolves have been killed.
 
-Return valid JSON format to act:
-{ "speech": <content>, "vote": <target_name>}
-    Example: { "speech": "Who should we hunt tonight?", "vote": nil }
-    Example: { "speech": nil, "vote": "Bandit" }
+Available actions are:
+    - speak: whatever you say will be broadcast to others in the room. 
+        - If two people try to speak at once, one may be interrupted.
+    Example: { "action": "speak", "content": "I am saying something."}
 
-You may speak without voting, and vote without speaking.
-Stay in character.
+    - vote: vote on a player to kill (night) or lynch (day)
+    Example: { "action": "vote", "target": "Robin" }
+
+    - pass: do nothing
+    Example: { "action": "pass", "content": None }
+
+Stay in character. Inject something new into the conversation.
 Keep dialogue brief.
-You may only do one action at a time.
-Only vote if you intend to lynch (at day) or hunt (at night) the target.
+If you are a werewolf, do not reveal your role during the day.
+You must return valid JSON.

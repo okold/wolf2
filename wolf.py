@@ -1,9 +1,9 @@
 from multiprocessing.connection import Pipe
-from wolfnpc import WolfNPC
 from wolfworld import WolfWorld
+from wolfnpc import WolfNPC
+import csv
 import sys
 import os
-import csv
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'game'))
 from llm import LLM
@@ -14,15 +14,14 @@ CLOUD = False
 
 if __name__ == "__main__":
 
-    if "cloud" in sys.argv:
+    if "cloud" in sys.argv or "online" in sys.argv:
         CLOUD = True
 
-
     if CLOUD:
-        sys_message_file = "npc_system_message_advanced"
+        sys_message_file = "npc_system_message_real_time.txt"
         turn_based = False
     else:
-        sys_message_file = "npc_system_message"
+        sys_message_file = "npc_system_message_turn_based.txt"
         turn_based = True
 
     player_list = []
@@ -37,7 +36,6 @@ if __name__ == "__main__":
     world.start()
 
     llm = LLM(cloud = CLOUD)
-
 
     for npc in npc_list:
         #self.log(npc)

@@ -1,27 +1,15 @@
-from multiprocessing.connection import Listener, Pipe, Connection
-from collections import Counter
-import random
-import time
 import sys
-import math
 import os
-import csv
-
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 from npc import NPC
-from world import World
-from room import Room
-from llm import BasicActionMessage, AdvancedActionMessage
-from speech import SpeakingContest
-from colorama import Fore, Style
 
 class WolfNPC(NPC):
 
-    def __init__(self, name, personality, goal, description, can_speak, gender, llm=None, turn_based = False, sys_message_file = "npc_system_message"):
+    def __init__(self, name, personality, goal, description, can_speak, gender, llm=None, turn_based = True, sys_message_file = "npc_system_message_turn_based.txt"):
         super().__init__(name, personality, goal, description, can_speak, gender, llm, turn_based)
 
-        with open(f'game/{sys_message_file}.txt', 'r', encoding='utf-8') as file:
+        with open(f'game/{sys_message_file}', 'r', encoding='utf-8') as file:
             self.SYSTEM_MESSAGE = file.read()
 
     def character_sheet(self) -> str:
@@ -29,12 +17,11 @@ class WolfNPC(NPC):
         Returns a character sheet, for use in LLM contexts.
         """
 
-        desc = f"""--CHARACTER SHEET--
-        Your name: {self.name}
-        Your role is: {self.role}
-        Game phase: {self.phase}
-        Your personality: {self.personality}
-        Your gender: {self.gender}
+        desc = f"""YOUR CHARACTER SHEET:
+        Nme: {self.name}
+        Role: {self.role}
+        Phase: {self.phase}
+        Personality: {self.personality}
 
         You are currently in a room named: {self.room_info['name']}
         {self.room_info['description']}
@@ -48,7 +35,7 @@ class WolfNPC(NPC):
 
         return desc
     
-    def update_summary_message(self, new_message : str):
+    def update_summary_message(self):
         new_message = f"""Update your long-term memory by summarizing and integrating your short-term memory.
         Keep your summary in first person.
         You are playing a game of werewolf, and your role is: {self.role}.

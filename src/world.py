@@ -10,44 +10,11 @@ from abc import ABC, abstractmethod
 from llm import LLM
 from colorama import Style
 from datetime import datetime
-from npc import create_npc_logger
+from utils import create_logger
 from speech import SpeakingContest
 from collections import Counter
 
 ADDRESS = ("localhost", 6000) #TODO: something about this
-
-def resolve_majority_vote(voters: dict, tiebreaker = False) -> str | None:
-    """
-    Given a dictionary of votes {voter: target}, returns the target with majority.
-    If there's no clear majority (tie or no votes), returns None.
-    """
-
-    if not voters:
-        return None
-    
-    if len(voters) == 1:
-        for actor in voters:
-            return voters[actor]
-    
-    #self.log(votes)
-
-    vote_counts = Counter(voters.values())
-    most_common = vote_counts.most_common(2)
-
-    # Check if there's a tie or no clear majority
-    if len(most_common) == 1:
-        return most_common[0][0]  # Only one person voted
-    elif most_common[0][1] > most_common[1][1]:
-        return most_common[0][0]  # Clear majority
-    elif tiebreaker:
-        if most_common[0][0] == None:
-            return most_common[1][0]
-        elif most_common[1][0] == None:
-            return most_common[0][0]
-        else:
-            return random.choice([most_common[0][0], most_common[1][0]])
-    else:
-        return None
 
 class World(Process, ABC):
     """
@@ -90,7 +57,7 @@ class World(Process, ABC):
         self.rooms = {self.default_room.name: self.default_room}
 
         # TODO: change this. this is bad. it works.
-        self.logger = create_npc_logger("World", timestamp)
+        self.logger = create_logger("Game")
 
         self.accept_connections = True
         self.connection_loop = Thread(target=self.new_connection_loop, daemon=True)
@@ -178,7 +145,7 @@ class World(Process, ABC):
                 actor["conn"] = conn
                 actor["room"] = self.default_room.name
                 conn.send(self.default_room.state())
-                self.move_actor_to_room(actor["name"], self.default_room.name, verbose = False)
+                self.move_actor_to_room(actor["name"], self.default_room.name, notify = False)
 
     def try_recv(self, conn: Connection):
         """
@@ -287,7 +254,7 @@ class World(Process, ABC):
             except Exception as e:
                 self.logger.error(f"Failed to send message to room {room}: {e}")
 
-    def move_actor_to_room(self, actor: str, room: str, verbose = True):
+    def move_actor_to_room(self, actor: str, room: str, verbose = True, notify = True):
         if room in self.rooms and actor in self.actors:
             old_room = self.actors[actor]["room"]
             self.actors[actor]["room"] = room
@@ -304,8 +271,10 @@ class World(Process, ABC):
 
             self.rooms[room].add_actor(data)
             arrival_message = f"{actor} has entered the {room}!"
-            self.send_to_room(room, {"role": "user", "content": arrival_message}, verbose=verbose)
-            self.send_to_room(room, self.rooms[room].state(), "room", verbose=False)
+
+            if notify:
+                self.send_to_room(room, {"role": "user", "content": arrival_message}, verbose=verbose)
+                self.send_to_room(room, self.rooms[room].state(), "room", verbose=False)
 
     # NOTE: this is NOT THREAD SAFE, and is intended to be called already within a lock
     def speak(self, actor: str, content: str, colour = None):
@@ -435,6 +404,40 @@ class World(Process, ABC):
 
                 self.send_to_room(self.actors[actor]["room"],
                             {"role": "system", "content": message})
+
+    def resolve_majority_vote(self, tiebreaker = False) -> str | None:
+        """
+        Returns the vote result with majority.
+        If there's no clear majority (tie or no votes), returns None.
+        Tiebreaker will resolve ties by choosing at random.
+        """
+
+        if not self.voters:
+            return None
+        
+        if len(self.voters) == 1:
+            for actor in self.voters:
+                return self.voters[actor]
+        
+        #self.log(votes)
+
+        vote_counts = Counter(self.voters.values())
+        most_common = vote_counts.most_common(2)
+
+        # Check if there's a tie or no clear majority
+        if len(most_common) == 1:
+            return most_common[0][0]  # Only one person voted
+        elif most_common[0][1] > most_common[1][1]:
+            return most_common[0][0]  # Clear majority
+        elif tiebreaker:
+            if most_common[0][0] == None:
+                return most_common[1][0]
+            elif most_common[1][0] == None:
+                return most_common[0][0]
+            else:
+                return random.choice([most_common[0][0], most_common[1][0]])
+        else:
+            return None
 
     def reset_votes(self):
         """

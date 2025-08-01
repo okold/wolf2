@@ -107,10 +107,10 @@ class SummaryContext(Context):
 
         prompt = long_term_memory + self.context + [{"role": "system", "content": self.summary_message}]
         
-        response = self.llm.prompt(prompt)
-        self.summary = response.choices[0].message.content
+        content, reasoning, usage = self.llm.prompt(prompt)
+        self.summary = content
 
-        self.log(f"Created a summary:\n{self.summary}")
+        self.logger.info(f"Created a summary. Usage: {usage}\n{reasoning}\n{self.summary}")
 
     def on_limit_reached(self):
         """

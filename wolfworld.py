@@ -1,17 +1,15 @@
-from multiprocessing.connection import Listener, Pipe, Connection
+from multiprocessing.connection import Connection
 
-from random import shuffle
+from random import random
 
 import random
 import time
 import sys
-import math
 import os
-import csv
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 from npc import NPC
-from world import World, resolve_majority_vote
+from world import World
 from room import Room
 
 from speech import SpeakingContest
@@ -43,7 +41,7 @@ class WolfWorld(World):
 
     #turn-based mode
     NIGHT_ROUNDS = 3
-    DAY_ROUNDS = 3
+    DAY_ROUNDS = 6
 
 
     def __init__(self, cli: Connection = None, turn_based = False):
@@ -103,7 +101,7 @@ class WolfWorld(World):
         
     def turn_based_loop(self):
 
-        while True:
+        while not self.end:
 
             turn_order = []
 
@@ -136,22 +134,22 @@ class WolfWorld(World):
                     self.send_act_token(name)
                     msg = actor["conn"].recv()
 
-                    if msg["speech"]:
-                        self.speak(name, msg["speech"], colour)
-                    if msg["vote"]:
-                        self.vote(name, msg["vote"])
-                    if not msg["speech"] and not msg["vote"]:
-                        self.send_to_room(self.current_room, {"role": "user", "content": f"{name} remains quiet."})
+                    if msg["action"] == "speak":
+                        self.speak(name, msg["content"], colour)
+                    if msg["action"] == "vote":
+                        self.vote(name, msg["content"])
+                    if msg["action"] == "pass":
+                        self.send_to_room(self.current_room, {"role": "user", "content": f"{name} is quiet."})
                 
-                vote_result = resolve_majority_vote(self.voters)
+                vote_result = self.resolve_majority_vote()
 
-                if vote_result:
+                if vote_result and self.phase == "night":
                     break
             
-            if not vote_result:
-                vote_result = resolve_majority_vote(self.voters, tiebreaker=True)
+            if not vote_result and self.phase == "night":
+                vote_result = self.resolve_majority_vote(tiebreaker=True)
 
-            self.phase_change(vote_result)
+            self.end = self.phase_change(vote_result)
         
             time.sleep(self.WAIT_TIME)
 
@@ -201,11 +199,11 @@ class WolfWorld(World):
             self.elapsed = int(time.time() - self.phase_start_time)
 
             if self.elapsed >= phase_duration and self.phase == "night":
-                vote_result = resolve_majority_vote(self.voters, tiebreaker=True)
+                vote_result = self.resolve_majority_vote(tiebreaker=True)
             elif self.elapsed >= phase_duration and self.phase == "day":
-                vote_result = resolve_majority_vote(self.voters)
+                vote_result = self.resolve_majority_vote()
             else:
-                vote_result = resolve_majority_vote(self.voters)
+                vote_result = self.resolve_majority_vote()
 
             if self.elapsed < phase_duration:
                 if time.time() - self.last_notify >= self.NOTIFY_PERIOD or phase_duration - self.elapsed <= 5:

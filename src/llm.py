@@ -1,12 +1,13 @@
 import json
+from ollama import chat
 from openai import OpenAI
 from pydantic import BaseModel
 
 API_PATH = "api.json"
 
 class BasicActionMessage(BaseModel):
-    vote: str | None
-    speech: str | None
+    action: str
+    content: str
 
 class AdvancedActionMessage(BaseModel):
     action: str
@@ -41,16 +42,12 @@ class LLM:
             )
             self.model = api["model"]
         else:
-            self.client = OpenAI(
-            base_url = 'http://localhost:11434/v1',
-            api_key='ollama'
-            )
             self.model = model
 
 
 
     # TODO: not dict, but Response return
-    def prompt(self, message: str | dict | list[dict], enforce_model = None) -> dict:
+    def prompt(self, message: str | dict | list[dict], enforce_model = None, think = True) -> dict:
         """
         Prompts the LLM.
 
@@ -58,21 +55,38 @@ class LLM:
             message (GPTMessage | list[GPTMessage]): context/message to send to LLM
             json (bool): forces JSON output, default False
         """
+        if think and self.model not in ["deepseek-r1:8b", "deepseek-r1:14b", "qwen3:8b", "qwen3:13b"]:
+            think = False
+            reasoning = False
 
         try:
-            if enforce_model:
-                response = self.client.chat.completions.parse(
-                    model = self.model,
-                    messages=message,
-                    response_format=enforce_model
-                )
-            else:
-                response = self.client.chat.completions.create(
-                    model = self.model,
-                    messages=message
-                )
+            if self.cloud:
+                if enforce_model:
+                    response = self.client.chat.completions.parse(
+                        model = self.model,
+                        messages=message,
+                        response_format=enforce_model
+                    )
+                else:
+                    response = self.client.chat.completions.create(
+                        model = self.model,
+                        messages=message
+                    )
+                content = response.choices[0].message.content
+                usage = response.usage
 
-            return response
+            else:
+                if enforce_model:
+                    response = chat(self.model, messages=message, think=think, format=enforce_model.model_json_schema())
+                else:
+                    response = chat(self.model, messages=message, think=think)
+
+                content = response.message.content
+                if think:
+                    reasoning = response.message.thinking
+                usage = response.prompt_eval_count
+
+            return content, reasoning, usage
         except Exception as e:
             print(f"{e}\nmessage = {message}")
 
