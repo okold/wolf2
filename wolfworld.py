@@ -1,14 +1,16 @@
 from multiprocessing.connection import Connection
 
 from random import random
-
 import random
 import time
 import sys
 import os
+import csv
+from datetime import datetime
+
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
-from npc import NPC
+from utils import CSVLogger
 from world import World
 from room import Room
 
@@ -29,9 +31,38 @@ def normalize_role(role):
     """
     return "villager" if role in ("seer", "villager") else role
 
+LOG_HEADERS = ["timestamp", "phase", "phase_num", "actor", "role", "strategy", "action", "target", "model", "context_length", "tokens_in", "tokens_out", "total_tokens", "eval_in (ms)", "eval_out (ms)", "eval_total (ms)", "content", "prompt"]
+
+class WolfLogger(CSVLogger):
+    def __init__(self, model, experiment):
+        super().__init__(f"{model} {experiment}", "logs", LOG_HEADERS)
+    
+    def log(self, actor = "", action = "", content =  "", target = "", phase = "", phase_num = "", model="", tokens_in = 0, tokens_out = 0, eval_in = 0, eval_out = 0, strategy="", role="", prompt="", context_length = 0):
+        with self.lock:
+            with open(self.filepath, 'a', newline='') as f:
+                writer = csv.DictWriter(f, fieldnames=self.headers)
+                writer.writerow({"timestamp": datetime.now(),
+                                 "actor": actor, 
+                                 "action": action, 
+                                 "content": content, 
+                                 "target": target, 
+                                 "phase": phase, 
+                                 "phase_num": phase_num,
+                                 "tokens_in": tokens_in,
+                                 "tokens_out": tokens_out,
+                                 "total_tokens": tokens_in + tokens_out,
+                                 "eval_in (ms)": eval_in, 
+                                 "eval_out (ms)": eval_out,
+                                 "eval_total (ms)": eval_in + eval_out,
+                                 "model": model,
+                                 "strategy": strategy,
+                                 "role": role,
+                                 "prompt": prompt,
+                                 "context_length": context_length})
+
 class WolfWorld(World):
 
-    PLAYER_COUNT = 6
+    PLAYER_COUNT = 8
     NUM_WOLVES = 2
 
     # real-time mode
@@ -41,10 +72,10 @@ class WolfWorld(World):
 
     #turn-based mode
     NIGHT_ROUNDS = 5
-    DAY_ROUNDS = 4
+    DAY_ROUNDS = 6
 
 
-    def __init__(self, cli: Connection = None, turn_based = False):
+    def __init__(self, cli: Connection = None, turn_based = False, csv_logger = None, wolf_strategy="window", village_strategy="summary"):
 
         self.day_room = Room("Village Tavern", "The village's official meeting place.")
         self.night_room = Room("Hideout", "A cave on the outskirts of the village.")
@@ -53,11 +84,15 @@ class WolfWorld(World):
         # start in the hideout... haha
         super().__init__(cli = cli, default_room=self.day_room, turn_based=turn_based)
 
+        self.csv_logger = csv_logger
         self.rooms[self.night_room.name] = self.night_room
         self.current_room = self.night_room
         self.phase = "night"
         self.phase_number = 1
         self.seer_targets = {}
+        self.wolf_strategy = wolf_strategy
+        self.village_strategy = village_strategy
+        self.seer_alive = True
 
     ### CORE FUNCTIONALITY (ABSTRACT METHODS)
     def setup(self):
@@ -66,8 +101,7 @@ class WolfWorld(World):
                 if len(self.actors) == self.PLAYER_COUNT:
                     self.accept_connections = False
                     break
-            time.sleep(1) # TODO: variable here
-
+            time.sleep(1)
 
         roles = ["werewolf"] * self.NUM_WOLVES + ["villager"] * (self.PLAYER_COUNT - self.NUM_WOLVES - 1) + ["seer"]
         random.shuffle(roles)
@@ -82,9 +116,13 @@ class WolfWorld(World):
         for actor, role in zip(self.actors, roles):
             self.actors[actor]["role"] = role
             self.send_to_actor(actor, role, "role")
+            if normalize_role(role) == "werewolf":
+                self.send_strategy_message(actor, self.wolf_strategy)
+            elif normalize_role(role) == "villager":
+                self.send_strategy_message(actor, self.village_strategy)
             colour = role_colour(role)
             roles_message += f"\n{actor} is a " + colour + role + Style.RESET_ALL
-
+            
             if role != "seer":
                 self.seer_targets[actor] = role
 
@@ -96,8 +134,12 @@ class WolfWorld(World):
                 self.move_actor_to_room(actor, self.night_room.name, verbose=False)
 
         self.reset_votes()
-        self.send_to_room(self.night_room.name, {"role": "system", "content": "You have arrived at the hideout to plot your first hunt. Choose a villager to kill!"})
+        for actor in self.actors:
+            self.send_phase_message(actor, self.phase)
+        self.send_to_room(self.night_room.name, {"role": "system", "content": "You have arrived at a new village to hunt. You've scoped out your targets, knowing nothing about them but their appearance.\n\tNow vote for who seems tastiest!"})
         self.awaken_room(self.night_room.name)  
+
+        self.log_csv(action="start_game")
         
     def turn_based_loop(self):
 
@@ -122,8 +164,12 @@ class WolfWorld(World):
                 if round == 1:
                     round_message += f"\n\tTurn Order: {turn_order}"
 
+
+                if round == num_rounds - 1:
+                    round_message += "\n\tThis is the penultimate round! Make your final decisions!"
+
                 if round == num_rounds:
-                    round_message += "\n\tThis is the FINAL ROUND! Vote if needed!"
+                    round_message += "\n\tThis is the FINAL ROUND! Cast your final votes!"
 
                 self.send_to_room(self.current_room, {"role": "system", "content": round_message})
 
@@ -133,15 +179,24 @@ class WolfWorld(World):
                     colour = role_colour(actor["role"])
 
                     self.send_act_token(name)
+                    self.log_csv(action="send_act_token", target=name)
+
                     msg = actor["conn"].recv()
 
                     if msg["action"] == "speak":
                         self.speak(name, msg["content"], colour)
+                        self.log_csv(actor=name, action="speak", content=msg["content"], role=self.actors[name]["role"])
+
                     if msg["action"] == "vote":
-                        self.vote(name, msg["content"])
-                        vote_result = self.resolve_majority_vote()
-                        if vote_result:
-                            break
+                        if actor["name"] != msg["content"] and msg["content"] != self.voters[actor["name"]] :
+                            self.vote(name, msg["content"], msg["reason"])
+                            self.log_csv(actor=name, action="vote", target=msg["content"], role=self.actors[name]["role"])
+                            vote_result = self.resolve_majority_vote()
+                            if vote_result and self.phase == "night":
+                                break
+                        else:
+                            self.send_to_actor(actor["name"], {"role": "system", "content": "ERROR! You cannot vote for yourself or vote for the same person twice in a row!"})
+                            self.send_to_room(self.current_room, {"role": "user", "content": f"{name} is quiet."})
                     if msg["action"] == "pass":
                         self.send_to_room(self.current_room, {"role": "user", "content": f"{name} is quiet."})
 
@@ -156,8 +211,6 @@ class WolfWorld(World):
             time.sleep(self.WAIT_TIME)
 
             
-
-
     def real_time_loop(self):
         self.phase_start_time = time.time()
         self.last_notify = self.phase_start_time
@@ -187,7 +240,7 @@ class WolfWorld(World):
                 if "gesture" in msg and msg["action"] != "gesture":
                     self.gesture(msg["actor"], msg["gesture"])
                 if msg["action"] == "vote":
-                    self.vote(msg["actor"], msg["target"])
+                    self.vote(msg["actor"], msg["target"], msg["reason"])
 
             speak_output_plain, speak_output_colour, speak_actor, interrupted_actors = speak_contest.resolve()
 
@@ -226,6 +279,9 @@ class WolfWorld(World):
 
     # HELPER METHODS
 
+    def log_csv(self, actor="World", action="", content="", target="", tokens_in=0, tokens_out=0, eval_in=0, eval_out=0, role=""):
+        self.csv_logger.log(actor=actor, action=action, content=content, target=target, phase=self.phase, phase_num=self.phase_number, tokens_in=tokens_in, tokens_out=tokens_out, eval_in=eval_in, eval_out=eval_out, role=role)
+
     def send_phase_message(self, actor: str, phase : str):
         try:
             with self.actors_lock:
@@ -255,6 +311,35 @@ class WolfWorld(World):
         else:
             self.send_to_room(self.night_room.name, self.valid_vote_targets, "vote_targets", verbose = False)
 
+    def force_summary(self): 
+        self.log({"role": "system", "content": "Waiting on summarizers..."})
+
+        summarizing_actors = []
+
+        for actor in self.actors:
+            if self.phase == "night" and normalize_role(self.actors[actor]["role"]) == "werewolf":
+                self.send_summary_message(actor)
+                summarizing_actors.append(actor)
+            elif self.phase == "day":
+                self.send_summary_message(actor)
+                summarizing_actors.append(actor)
+
+        while True:
+            ready_actors = []
+
+            for actor in summarizing_actors:
+                response = self.try_recv(self.actors[actor]["conn"])
+                if response:
+                    ready_actors.append(actor)
+                    self.log({"role": "system", "content": f"{actor} has made a summary!"})
+                
+            summarizing_actors = [name for name in summarizing_actors if name not in ready_actors]
+
+            if summarizing_actors == []:
+                break
+            else:
+                time.sleep(1)
+
     def reset_timer(self):
         self.phase_start_time = time.time()
         self.last_notify = self.phase_start_time    
@@ -276,8 +361,13 @@ class WolfWorld(World):
             kill_message = {"role": "user", "content": f"{vote_result}, a {self.actors[vote_result]['role']}, has been killed!"}
             self.send_to_room(self.night_room, kill_message, verbose=False)
             self.send_to_room(self.day_room, kill_message)
+            self.log_csv(action="declare_vote_result", role=self.actors[vote_result]["role"], target=vote_result)
+
+            if self.actors[vote_result]['role'] == "seer":
+                self.seer_alive = False
 
         self.clean_flagged_actors(verbose=False)
+        self.force_summary()
 
         wolf_count = self.get_wolf_count()
         villager_count = self.get_villager_count()
@@ -285,8 +375,10 @@ class WolfWorld(World):
         # reached victory condition
         if wolf_count > villager_count or wolf_count == 0 or (self.phase == "day" and wolf_count == villager_count):
             if wolf_count == 0:
+                self.log_csv(action="declare_winner", content="village")
                 self.log(Style.BRIGHT + role_colour("villager") + "Villagers win!" + Style.RESET_ALL)
             else:
+                self.log_csv(action="declare_winner", content="werewolves")
                 self.log(Style.BRIGHT + role_colour("werewolf") + "Werewolves win!" + Style.RESET_ALL)
 
             return True
@@ -302,12 +394,20 @@ class WolfWorld(World):
             self.current_room = self.night_room
 
         self.phase_header()
+        self.log_csv(action="phase_change")
 
         if vote_result:
-            day_message = f"You have met at the village tavern to discuss {vote_result}'s death.\n\t{wolf_count} werewolves remain.\n\t{villager_count} villagers remain."
+            day_message = f"You have met at the village tavern with a bunch of strangers to discuss {vote_result}'s death, and to vote to lynch a suspect."
         else:
-            day_message = f"You have met at the village tavern.\n\tThe night was quiet.\n\t{wolf_count} werewolves remain.\n\t{villager_count} villagers remain."
+            day_message = f"You have met at the village tavern with a bunch of strangers.\n\tThe night was quiet."
         
+        if self.seer_alive:
+            day_message += "\n\tThe seer still lives!"
+        else:
+            day_message += "\n\tWoe, for the seer is dead!"
+
+        day_message += f"\n\t{wolf_count} werewolves remain.\n\t{villager_count} villagers remain."
+
         if self.phase_number == 1:
             day_message += "\n\tThis is the first day."
 
@@ -331,8 +431,9 @@ class WolfWorld(World):
                 if role == "seer":
                     try:
                         target = random.choice(list(self.seer_targets.keys()))
-                        self.send_to_actor(actor, {"role": "user", "content": f"Last night, you receieved a vision! {target} is a {self.seer_targets[target]}!"})
+                        self.send_to_actor(actor, {"role": "system", "content": f"Last night, you receieved a vision! {target} is a {self.seer_targets[target]}!"})
                         self.log(role_colour("seer") + actor + Style.RESET_ALL + f" recieved {target}'s role: " + role_colour(self.seer_targets[target]) + self.seer_targets[target] + Style.RESET_ALL)
+                        self.log_csv(action="seer_vision", content=f"{target}", target=actor, role=self.seer_targets[target])
                         del self.seer_targets[target]
                     except:
                         pass
@@ -342,6 +443,9 @@ class WolfWorld(World):
 
             elif self.phase == "night" and role == "werewolf":
                 self.move_actor_to_room(actor, self.night_room.name, verbose=False)
+
+        for actor in self.actors:
+            self.send_phase_message(actor, self.phase)
 
         # cleanup
         if self.phase == "day":

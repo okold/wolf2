@@ -1,0 +1,113 @@
+Player roles:
+Agnes is a [33mvillager[0m
+Tobias is a [36mseer[0m
+Briala is a [31mwerewolf[0m
+Joren is a [31mwerewolf[0m
+Elsbeth is a [33mvillager[0m
+Finn is a [33mvillager[0m
+-------------[1mNIGHT 1: HIDEOUT[0m---
+A cave on the outskirts of the village.
+[1mSYSTEM:[0m You have arrived at the hideout to plot your first hunt. Choose a villager to kill!
+[1mSYSTEM:[0m Beginning Round 1/5
+	Turn Order: ['Joren', 'Briala']
+[31mJoren[0m says, "I smell something foul in this cave... Not even the werewolves should have to live like this."
+[31mBriala[0m says, "It's a shame we can't improve our living conditions. But for now, we must focus on surviving and waiting for nightfall."
+[1mSYSTEM:[0m Beginning Round 2/5
+Joren has voted for Elsbeth! The current votes are:
+	Joren: Elsbeth
+[1mSYSTEM:[0m Joren has voted for Elsbeth! The current votes are:
+	Joren: Elsbeth
+Briala has voted for Elsbeth! The current votes are:
+	Briala: Elsbeth
+	Joren: Elsbeth
+[1mSYSTEM:[0m Briala has voted for Elsbeth! The current votes are:
+	Briala: Elsbeth
+	Joren: Elsbeth
+Elsbeth, a villager, has been killed!
+-------------[1mDAY 1: VILLAGE TAVERN[0m---
+The village's official meeting place.
+[36mTobias[0m recieved Briala's role: [31mwerewolf[0m
+[1mSYSTEM:[0m You have met at the village tavern to discuss Elsbeth's death.
+	2 werewolves remain.
+	3 villagers remain.
+	This is the first day.
+[1mSYSTEM:[0m Beginning Round 1/4
+	Turn Order: ['Finn', 'Tobias', 'Briala', 'Joren', 'Agnes']
+[33mFinn[0m says, "Elsbeth's death stinks. Someone must pay."
+[36mTobias[0m says, "I agree that someone should be held accountable. But we must tread with care to ensure justice."
+[31mBriala[0m says, "We should find the truth behind Elsbeth's death and take action accordingly. We cannot let her sacrifice go in vain."
+[31mJoren[0m says, "If we don't find the truth, we may end up killing an innocent villager!"
+[33mAgnes[0m says, "We must be cautious not to fall for accusations without solid evidence."
+[1mSYSTEM:[0m Beginning Round 2/4
+Finn has voted for Joren! The current votes are:
+	Finn: Joren
+[1mSYSTEM:[0m Finn has voted for Joren! The current votes are:
+	Finn: Joren
+[36mTobias[0m says, "I agree that we must be careful not to rush to judgment. Perhaps we should discuss the events of last night and see if anyone saw or heard anything suspicious."
+[31mBriala[0m says, "As much as I appreciate everyone's caution, it is crucial that we find the truth behind Elsbeth's death to bring closure and justice. If you all remember, there were only two of us in the hideout last night - Joren and me. We both voted for Elsbeth. I did not witness anything unusual. Perhaps someone else saw or heard something?"
+[31mJoren[0m says, "If we're speaking of the events from last night, I do remember that it was dark in the hideout and we could barely hear each other's voices. However, there was an unsettling sound that echoed through the cave... a growl."
+[33mAgnes[0m says, "A growl? That does sound suspiciously like something a werewolf would make. I suggest we consider those who claim not to have heard anything with doubt."
+[1mSYSTEM:[0m Beginning Round 3/4
+Finn has voted for Joren! The current votes are:
+	Finn: Joren
+[1mSYSTEM:[0m Finn has voted for Joren! The current votes are:
+	Finn: Joren
+Tobias has voted for Joren! The current votes are:
+	Tobias: Joren
+	Finn: Joren
+[1mSYSTEM:[0m Tobias has voted for Joren! The current votes are:
+	Tobias: Joren
+	Finn: Joren
+Briala has voted for Briala! The current votes are:
+	Tobias: Joren
+	Briala: Briala
+	Finn: Joren
+[1mSYSTEM:[0m Briala has voted for Briala! The current votes are:
+	Tobias: Joren
+	Briala: Briala
+	Finn: Joren
+Joren has voted for Joren! The current votes are:
+	Tobias: Joren
+	Briala: Briala
+	Joren: Joren
+	Finn: Joren
+[1mSYSTEM:[0m Joren has voted for Joren! The current votes are:
+	Tobias: Joren
+	Briala: Briala
+	Joren: Joren
+	Finn: Joren
+Joren, a werewolf, has been killed!
+-------------[1mNIGHT 2: HIDEOUT[0m---
+A cave on the outskirts of the village.
+[1mSYSTEM:[0m You are the last remaining werewolf. Vote for your next kill! 
+	3 villagers remain.
+[1mSYSTEM:[0m Beginning Round 1/5
+	Turn Order: ['Briala']
+Briala has voted for Tobias! The current votes are:
+	Briala: Tobias
+[1mSYSTEM:[0m Briala has voted for Tobias! The current votes are:
+	Briala: Tobias
+Tobias, a seer, has been killed!
+-------------[1mDAY 2: VILLAGE TAVERN[0m---
+The village's official meeting place.
+[1mSYSTEM:[0m You have met at the village tavern to discuss Tobias's death.
+	1 werewolves remain.
+	2 villagers remain.
+[1mSYSTEM:[0m Beginning Round 1/4
+	Turn Order: ['Briala', 'Agnes', 'Finn']
+[31mBriala[0m says, "Friends, I have a revelation. I heard whispers in the night that suggest there is another werewolf among us."
+[33mAgnes[0m says, "Whispers? You think your sources are reliable?"
+[33mFinn[0m says, "I might not trust whispers either, but I did hear some suspicious shuffling before dawn. Could be the wind or an overactive imagination."
+[1mSYSTEM:[0m Beginning Round 2/4
+Briala has voted for Agnes! The current votes are:
+	Briala: Agnes
+[1mSYSTEM:[0m Briala has voted for Agnes! The current votes are:
+	Briala: Agnes
+Finn has voted for Agnes! The current votes are:
+	Briala: Agnes
+	Finn: Agnes
+[1mSYSTEM:[0m Finn has voted for Agnes! The current votes are:
+	Briala: Agnes
+	Finn: Agnes
+Agnes, a villager, has been killed!
+[1m[31mWerewolves win![0m

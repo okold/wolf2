@@ -8,12 +8,13 @@ API_PATH = "api.json"
 class BasicActionMessage(BaseModel):
     action: str
     content: str
+    reason: str | None
 
 class AdvancedActionMessage(BaseModel):
     action: str
     content: str | None
     target: str | None
-    speech: str | None
+    reason: str | None
 
 # TODO: graceful exit on bad api.json file
 class LLM:
@@ -65,7 +66,15 @@ class LLM:
                         messages=message
                     )
                 content = response.choices[0].message.content
+                
                 usage = response.usage
+
+                # TODO: rework this
+                tokens_in = 0
+                tokens_out = 0
+                eval_in = 0
+                eval_out = 0
+
 
             else:
                 if enforce_model:
@@ -74,11 +83,15 @@ class LLM:
                     response = chat(self.model, messages=message, think=False)
 
                 content = response.message.content
+
                 if think:
                     reasoning = response.message.thinking
-                usage = response.prompt_eval_count
+                tokens_in = response.prompt_eval_count
+                tokens_out = response.eval_count
+                eval_in = response.prompt_eval_duration / 1_000_000
+                eval_out = response.eval_duration / 1_000_000
 
-            return content, reasoning, usage
+            return content, reasoning, tokens_in, tokens_out, eval_in, eval_out
         except Exception as e:
             print(f"{e}\nmessage = {message}")
 

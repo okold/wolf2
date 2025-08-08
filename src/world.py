@@ -9,9 +9,9 @@ import random
 from abc import ABC, abstractmethod
 from llm import LLM
 from colorama import Style
-from datetime import datetime
-from utils import create_logger
-from speech import SpeakingContest
+import traceback
+from utils import create_logger, CSVLogger
+from logging import Logger
 from collections import Counter
 
 ADDRESS = ("localhost", 6000) #TODO: something about this
@@ -29,7 +29,7 @@ class World(Process, ABC):
     WAIT_TIME = 1 # wait period between "rounds"
     PRINT_COOLDOWN = 1 # just to make reading it less of a nightmare
 
-    def __init__(self, llm: LLM = None, cli: Connection = None, default_room: Room = None, turn_based = False):
+    def __init__(self, llm: LLM = None, cli: Connection = None, default_room: Room = None, turn_based = False, csv_logger = None):
         super().__init__()
 
         self.llm = llm                      # LLM information
@@ -51,12 +51,11 @@ class World(Process, ABC):
 
         self.current_room = self.default_room
 
-        timestamp = datetime.now()
-
         self.rooms_lock = Lock()
         self.rooms = {self.default_room.name: self.default_room}
 
         self.logger = create_logger("World")
+        self.csv_logger = csv_logger
 
         self.accept_connections = True
         self.connection_loop = Thread(target=self.new_connection_loop, daemon=True)
@@ -88,11 +87,24 @@ class World(Process, ABC):
         Logs immediately, and inserts into the print queue.
         """
         try:
-            self.logger.info(message)
-            self.print_queue.put(message)
+            if isinstance(self.logger, Logger):
+                if isinstance(message, dict):
+                    try:
+                        if message["role"] == "user":
+                            message = message["content"]
+                        elif message["role"] == "system":
+                            message = f"\033[1mSYSTEM:\033[0m {message['content']}"
+                    except:
+                        pass
+                self.logger.info(message)
+            elif self.logger != None:
+                raise TypeError("The provided logger is not a Logger")
+            
+            if print:
+                self.print_queue.put(message)
 
-        except:
-            pass
+        except Exception as e:
+            traceback.print_exception(e)
 
     def print_loop(self):
         """
@@ -183,6 +195,13 @@ class World(Process, ABC):
         try:
             with self.actors_lock:
                 self.actors[actor]["conn"].send({"type": "act_token"})
+        except Exception as e:
+            self.logger.error(f"Failed to send act token to actor {actor}: {e}")
+
+    def send_strategy_message(self, actor: str, strategy):
+        try:
+            with self.actors_lock:
+                self.actors[actor]["conn"].send({"type": "strategy", "content": strategy})
         except Exception as e:
             self.logger.error(f"Failed to send act token to actor {actor}: {e}")
 
@@ -384,7 +403,7 @@ class World(Process, ABC):
         self.send_to_room(self.actors[actor]["room"], {"role": "user", "content": f"{actor} {content}."})
 
 
-    def vote(self, actor: str, target: str, validate = True, verbose = True):
+    def vote(self, actor: str, target: str, reason: str, validate = True, verbose = True):
         """
         
         """
@@ -392,7 +411,7 @@ class World(Process, ABC):
             self.voters[actor] = target
 
             if verbose:
-                message = f"{actor} has voted for {target}! The current votes are:"
+                message = f"{actor} has voted for {target}!\n\tReason: {reason}\n\tThe current votes are:"
                 
                 for voter in self.voters:
                     if self.voters[voter] != None:

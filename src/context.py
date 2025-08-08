@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from llm import LLM
-import logging
+from logging import Logger
 
 from pydantic import BaseModel
 
@@ -16,7 +16,7 @@ class Context(ABC):
         summary (str): for pre-loading long-term memory
         logger (Logger): to log
     """
-    DEFAULT_LIMIT = 20
+    DEFAULT_LIMIT = 100
     DEFAULT_KEEP = 10
 
 
@@ -24,19 +24,15 @@ class Context(ABC):
                  llm: LLM = None, 
                  context_limit = DEFAULT_LIMIT, 
                  context_keep = DEFAULT_KEEP, 
-                 context: list[dict] = [], 
-                 summary = "", 
-                 logger: logging.Logger = None):
+                 context: list[dict] = [],
+                 logger: Logger = None,
+                 csv_logger = None):
         self.llm = llm
         self.context = context
         self.context_limit = context_limit
         self.context_keep = context_keep
-        self.summary = summary
         self.logger = logger
-
-    def log(self, message):
-        if self.logger:
-            self.logger.info(message)
+        self.csv_logger = csv_logger
 
     def clear(self):
         self.context = []
@@ -53,10 +49,12 @@ class Context(ABC):
         Appends a GPTMessage to the context
         """
         self.context.append(message)
-        self.log(f"Appended message to context: {message}")
+        if isinstance(self.logger, Logger):
+            self.logger.info(f"Appended message to context: {message}")
 
         if len(self.context) >= self.context_limit:
-            self.log(f"Reached context window size {len(self.context)}/{self.context_limit}")
+            if isinstance(self.logger, Logger):
+                self.logger.info(f"Reached context window size {len(self.context)}/{self.context_limit}")
             self.on_limit_reached()
 
     @abstractmethod
@@ -88,33 +86,44 @@ class SummaryContext(Context):
                  llm = None, 
                  context_limit=Context.DEFAULT_LIMIT, 
                  context_keep=Context.DEFAULT_KEEP, 
-                 context=[], 
-                 summary="", 
+                 context=[],
+                 summary="Your memories are fresh!",
                  logger = None,
+                 csv_logger = None,
                  summary_message = "Update your long-term memory by summarizing your short-term memory, while keeping your last summary within your long-term memory in mind. Keep your summary in first-person."):
-        super().__init__(llm, context_limit, context_keep, context, summary, logger)
+        super().__init__(llm, context_limit, context_keep, context, logger, csv_logger)
         self.name = name
         self.personality = personality
         self.goal = goal
         self.summary_message = summary_message
+        self.summary = summary
 
     def summarize(self):
         """
         Summarizes the context using the LLM.
         """
-    
-        long_term_memory = [{"role": "system", "content": ""}]
+        if self.context != []:
+            long_term_memory = [{"role": "system", "content": self.summary}]
 
-        prompt = long_term_memory + self.context + [{"role": "system", "content": self.summary_message}]
-        
-        content, reasoning, usage = self.llm.prompt(prompt)
-        self.summary = content
-
-        self.logger.info(f"Created a summary. Usage: {usage}\n{reasoning}\n{self.summary}")
+            prompt = long_term_memory + self.context + [{"role": "system", "content": self.summary_message}]
+            
+            content, reasoning, tokens_in, tokens_out, eval_in, eval_out = self.llm.prompt(prompt)
+            self.summary = content
+            if isinstance(self.logger, Logger):
+                self.logger.info(f"Created a summary. Usage: {tokens_in + tokens_out} ({eval_in + eval_out} ms)\n{reasoning}\n{self.summary}")
+            self.csv_logger.log(actor=self.name, action="summarize", content=self.summary, tokens_in=tokens_in, tokens_out=tokens_out, eval_in=eval_in, eval_out=eval_out, prompt=prompt, context_length=len(prompt), strategy="summarize")
 
     def on_limit_reached(self):
         """
         Summarizes, then trims context.
         """
-        self.summarize()
+        pass
+        #self.summarize()
+        #self.trim()
+
+class WindowContext(Context):
+    def __init__(self, context_limit=Context.DEFAULT_LIMIT, context = [], logger= None):
+        super().__init__(context_limit=context_limit, context_keep=context_limit-1, context=context, logger=logger)
+
+    def on_limit_reached(self):
         self.trim()

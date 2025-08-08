@@ -1,0 +1,6 @@
+{
+    "model": "dolphin3:8b",
+    "cloud": false,
+    "wolf_strategy": "summary",
+    "village_strategy": "window"
+}

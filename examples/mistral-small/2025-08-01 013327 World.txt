@@ -1,0 +1,143 @@
+2025-08-01 01:33:28,123 - INFO - Player roles:
+Agnes is a [31mwerewolf[0m
+Tobias is a [33mvillager[0m
+Briala is a [33mvillager[0m
+Joren is a [36mseer[0m
+Elsbeth is a [31mwerewolf[0m
+Finn is a [33mvillager[0m
+2025-08-01 01:33:28,124 - INFO - -------------[1mNIGHT 1: HIDEOUT[0m---
+A cave on the outskirts of the village.
+2025-08-01 01:33:28,124 - INFO - {'role': 'system', 'content': 'You have arrived at the hideout to plot your first hunt. Choose a villager to kill!'}
+2025-08-01 01:33:28,125 - INFO - {'role': 'system', 'content': "Beginning Round 1/5\n\tTurn Order: ['Agnes', 'Elsbeth']"}
+2025-08-01 01:34:10,139 - INFO - Agnes has voted for Tobias! The current votes are:
+	Agnes: Tobias
+2025-08-01 01:34:10,140 - INFO - {'role': 'system', 'content': 'Agnes has voted for Tobias! The current votes are:\n\tAgnes: Tobias'}
+2025-08-01 01:34:34,720 - INFO - Elsbeth has voted for Finn! The current votes are:
+	Agnes: Tobias
+	Elsbeth: Finn
+2025-08-01 01:34:34,720 - INFO - {'role': 'system', 'content': 'Elsbeth has voted for Finn! The current votes are:\n\tAgnes: Tobias\n\tElsbeth: Finn'}
+2025-08-01 01:34:34,720 - INFO - {'role': 'system', 'content': 'Beginning Round 2/5'}
+2025-08-01 01:35:08,840 - INFO - [31mAgnes[0m says, "We need to strike quickly. Tobias is a threat."
+2025-08-01 01:35:47,153 - INFO - [31mElsbeth[0m says, "I sense a darkness around Tobias. But Finn... there's something off about him too."
+2025-08-01 01:35:47,153 - INFO - {'role': 'system', 'content': 'Beginning Round 3/5'}
+2025-08-01 01:36:34,424 - INFO - [31mAgnes[0m says, "Tobias is the bigger threat. We must eliminate him first."
+2025-08-01 01:37:20,705 - INFO - [31mElsbeth[0m says, "Darkness lingers in many corners. Finn's secrets whisper to me."
+2025-08-01 01:37:20,705 - INFO - {'role': 'system', 'content': 'Beginning Round 4/5'}
+2025-08-01 01:38:02,788 - INFO - [31mAgnes[0m says, "Enough talk. Tobias dies tonight."
+2025-08-01 01:38:52,088 - INFO - Elsbeth has voted for Tobias! The current votes are:
+	Agnes: Tobias
+	Elsbeth: Tobias
+2025-08-01 01:38:52,088 - INFO - {'role': 'system', 'content': 'Elsbeth has voted for Tobias! The current votes are:\n\tAgnes: Tobias\n\tElsbeth: Tobias'}
+2025-08-01 01:38:52,088 - INFO - {'role': 'user', 'content': 'Tobias, a villager, has been killed!'}
+2025-08-01 01:38:52,089 - INFO - -------------[1mDAY 1: VILLAGE TAVERN[0m---
+The village's official meeting place.
+2025-08-01 01:38:52,089 - INFO - [36mJoren[0m recieved Briala's role: [33mvillager[0m
+2025-08-01 01:38:52,089 - INFO - {'role': 'system', 'content': "You have met at the village tavern to discuss Tobias's death.\n\t2 werewolves remain.\n\t3 villagers remain.\n\tChoose who to lynch!\n\tThis is the first day."}
+2025-08-01 01:38:53,091 - INFO - {'role': 'system', 'content': "Beginning Round 1/4\n\tTurn Order: ['Finn', 'Agnes', 'Briala', 'Joren', 'Elsbeth']"}
+2025-08-01 01:41:47,456 - INFO - [33mFinn[0m says, "I've hunted beasts twice the size of a werewolf! We'll find this monster before the sun sets!"
+2025-08-01 01:45:25,942 - INFO - [31mAgnes[0m says, "Brave words, Finn. But we need more than bravery. We need wisdom. Who among us is hiding their true nature?"
+2025-08-01 01:46:19,563 - INFO - [33mBriala[0m says, "We must be careful, friends. The werewolf could be anyone. Let's think wisely before we act."
+2025-08-01 01:47:16,989 - INFO - [36mJoren[0m says, "Aye, words are cheap. I've seen the beast's work before. We need proof, not just talk."
+2025-08-01 01:48:20,666 - INFO - [31mElsbeth[0m says, "The shadows speak of more than one predator among us. We must be vigilant."
+2025-08-01 01:48:20,666 - INFO - {'role': 'system', 'content': 'Beginning Round 2/4'}
+2025-08-01 01:49:23,620 - INFO - [33mFinn[0m says, "I've got knives for every beast in these woods. Let's see who's hiding in plain sight!"
+2025-08-01 01:53:18,233 - INFO - [31mAgnes[0m says, "Enough talk of beasts and shadows. We need to act. Who among us has been acting suspiciously? Speak up, or the werewolf will strike again."
+2025-08-01 01:54:29,514 - INFO - [33mBriala[0m says, "Let's not accuse without reason. We must be united in our search for the truth."
+2025-08-01 01:55:37,696 - INFO - [36mJoren[0m says, "I've seen the beast's work before. We need proof, not just talk. Who's got a reason to hide?"
+2025-08-01 01:57:05,941 - INFO - [31mElsbeth[0m says, "The night reveals many truths. Who among us has been seen wandering after dark?"
+2025-08-01 01:57:05,942 - INFO - {'role': 'system', 'content': 'Beginning Round 3/4'}
+2025-08-01 02:08:24,692 - INFO - [33mFinn[0m says, "I've been out hunting every night. Ask anyone!"
+2025-08-01 02:09:54,035 - INFO - [31mAgnes[0m says, "Hunting every night, Finn? That's convenient. Or perhaps you're just trying to cover your tracks."
+2025-08-01 02:11:20,564 - INFO - [33mBriala[0m says, "Finn, I've seen you return at dawn. But let's not jump to conclusions. We should all share our alibis."
+2025-08-01 02:13:02,335 - INFO - [36mJoren[0m says, "Aye, and I've seen the beast's work up close. Finn, you're right out in the open. But that don't mean you're clean. What about the rest of you? Any night owls here?"
+2025-08-01 02:14:30,449 - INFO - [31mElsbeth[0m says, "The night has many eyes. I've seen some of you slipping away when the moon is high."
+2025-08-01 02:14:30,449 - INFO - {'role': 'system', 'content': 'Beginning Round 4/4\n\tThis is the FINAL ROUND! Vote if needed!'}
+2025-08-01 02:19:23,592 - INFO - Finn has voted for Agnes! The current votes are:
+	Finn: Agnes
+2025-08-01 02:19:23,592 - INFO - {'role': 'system', 'content': 'Finn has voted for Agnes! The current votes are:\n\tFinn: Agnes'}
+2025-08-01 02:21:02,576 - INFO - [31mAgnes[0m says, "I've seen some of you lurking in the shadows. But I won't name names... yet. Let's see who's left standing when the sun rises."
+2025-08-01 02:22:53,040 - INFO - [33mBriala[0m says, "Agnes, I've known you since you were a child. I trust you, but we must be sure. Let's not let fear divide us."
+2025-08-01 02:34:57,707 - INFO - [36mJoren[0m says, "Aye, shadows hide more than just beasts. I've seen things too, but I need proof. Who's ready to step into the light?"
+2025-08-01 02:36:19,424 - INFO - [31mElsbeth[0m says, "The shadows whisper many secrets. But who listens? Who understands?"
+2025-08-01 02:36:19,424 - INFO - -------------[1mNIGHT 2: HIDEOUT[0m---
+A cave on the outskirts of the village.
+2025-08-01 02:36:19,425 - INFO - {'role': 'system', 'content': 'You are meeting at the werewolf hideout. Vote for your next kill! \n\t3 villagers remain.'}
+2025-08-01 02:36:20,426 - INFO - {'role': 'system', 'content': "Beginning Round 1/5\n\tTurn Order: ['Agnes', 'Elsbeth']"}
+2025-08-01 02:39:57,656 - INFO - [31mAgnes[0m says, "We must strike swiftly. Finn's been watching us too closely. He's suspicious."
+2025-08-01 02:41:15,429 - INFO - Elsbeth has voted for Finn! The current votes are:
+	Elsbeth: Finn
+2025-08-01 02:41:15,429 - INFO - {'role': 'system', 'content': 'Elsbeth has voted for Finn! The current votes are:\n\tElsbeth: Finn'}
+2025-08-01 02:41:15,430 - INFO - {'role': 'system', 'content': 'Beginning Round 2/5'}
+2025-08-01 02:42:15,132 - INFO - Agnes has voted for Finn! The current votes are:
+	Agnes: Finn
+	Elsbeth: Finn
+2025-08-01 02:42:15,132 - INFO - {'role': 'system', 'content': 'Agnes has voted for Finn! The current votes are:\n\tAgnes: Finn\n\tElsbeth: Finn'}
+2025-08-01 02:42:15,133 - INFO - {'role': 'user', 'content': 'Finn, a villager, has been killed!'}
+2025-08-01 02:42:15,133 - INFO - -------------[1mDAY 2: VILLAGE TAVERN[0m---
+The village's official meeting place.
+2025-08-01 02:42:15,133 - INFO - [36mJoren[0m recieved Agnes's role: [31mwerewolf[0m
+2025-08-01 02:42:15,133 - INFO - {'role': 'system', 'content': "You have met at the village tavern to discuss Finn's death.\n\t2 werewolves remain.\n\t2 villagers remain.\n\tChoose who to lynch!\n\tIf a werewolf is not lynched today, then the werewolves win!"}
+2025-08-01 02:42:16,135 - INFO - {'role': 'system', 'content': "Beginning Round 1/4\n\tTurn Order: ['Joren', 'Agnes', 'Briala', 'Elsbeth']"}
+2025-08-01 02:49:28,541 - INFO - [36mJoren[0m says, "I've seen the truth in the shadows. Agnes, you're one of them."
+2025-08-01 02:50:32,881 - INFO - [31mAgnes[0m says, "Nonsense. I've lived here longer than any of you. I've got nothing to hide."
+2025-08-01 02:51:37,132 - INFO - [33mBriala[0m says, "Joren, please, let's not accuse without proof. We must trust in each other."
+2025-08-01 02:52:51,423 - INFO - [31mElsbeth[0m says, "The shadows do not lie. But neither do they reveal all."
+2025-08-01 02:52:51,423 - INFO - {'role': 'system', 'content': 'Beginning Round 2/4'}
+2025-08-01 02:53:43,980 - INFO - Joren has voted for Agnes! The current votes are:
+	Joren: Agnes
+2025-08-01 02:53:43,980 - INFO - {'role': 'system', 'content': 'Joren has voted for Agnes! The current votes are:\n\tJoren: Agnes'}
+2025-08-01 02:55:02,066 - INFO - [31mAgnes[0m says, "I've been a pillar of this village for decades. If anyone's hiding something, it's not me."
+2025-08-01 02:58:32,494 - INFO - [33mBriala[0m says, "Agnes, I've known you for years. You've always been kind and honest. But Joren, we must consider his words carefully."
+2025-08-01 02:59:39,174 - INFO - [31mElsbeth[0m says, "The night whispers secrets, but we must be careful who we listen to."
+2025-08-01 02:59:39,174 - INFO - {'role': 'system', 'content': 'Beginning Round 3/4'}
+2025-08-01 03:07:59,344 - INFO - [36mJoren[0m says, "I've seen what I've seen. Agnes, you're hiding something. I'm sticking with my vote."
+2025-08-01 03:09:18,805 - INFO - [31mAgnes[0m says, "I've got nothing to hide. But if you're so sure, Joren, why not tell us what you've seen?"
+2025-08-01 03:10:26,262 - INFO - [33mBriala[0m says, "Perhaps we should consider who else might have reason to hide. Let's not rush to judgment."
+2025-08-01 03:11:40,519 - INFO - Elsbeth has voted for Agnes! The current votes are:
+	Joren: Agnes
+	Elsbeth: Agnes
+2025-08-01 03:11:40,519 - INFO - {'role': 'system', 'content': 'Elsbeth has voted for Agnes! The current votes are:\n\tJoren: Agnes\n\tElsbeth: Agnes'}
+2025-08-01 03:11:40,519 - INFO - {'role': 'system', 'content': 'Beginning Round 4/4\n\tThis is the FINAL ROUND! Vote if needed!'}
+2025-08-01 03:13:03,170 - INFO - [36mJoren[0m says, "The shadows don't lie. Agnes, you're hiding something. I'm with Joren."
+2025-08-01 03:14:14,355 - INFO - Agnes has voted for Joren! The current votes are:
+	Agnes: Joren
+	Joren: Agnes
+	Elsbeth: Agnes
+2025-08-01 03:14:14,355 - INFO - {'role': 'system', 'content': 'Agnes has voted for Joren! The current votes are:\n\tAgnes: Joren\n\tJoren: Agnes\n\tElsbeth: Agnes'}
+2025-08-01 03:14:14,355 - INFO - {'role': 'user', 'content': 'Agnes, a werewolf, has been killed!'}
+2025-08-01 03:14:14,355 - INFO - -------------[1mNIGHT 3: HIDEOUT[0m---
+A cave on the outskirts of the village.
+2025-08-01 03:14:14,356 - INFO - {'role': 'system', 'content': 'You are the last remaining werewolf. Vote for your next kill! \n\t2 villagers remain.'}
+2025-08-01 03:14:15,357 - INFO - {'role': 'system', 'content': "Beginning Round 1/5\n\tTurn Order: ['Elsbeth']"}
+2025-08-01 03:18:07,060 - INFO - Elsbeth has voted for Briala! The current votes are:
+	Elsbeth: Briala
+2025-08-01 03:18:07,060 - INFO - {'role': 'system', 'content': 'Elsbeth has voted for Briala! The current votes are:\n\tElsbeth: Briala'}
+2025-08-01 03:18:07,060 - INFO - {'role': 'user', 'content': 'Briala, a villager, has been killed!'}
+2025-08-01 03:18:07,061 - INFO - -------------[1mDAY 3: VILLAGE TAVERN[0m---
+The village's official meeting place.
+2025-08-01 03:18:07,061 - INFO - [36mJoren[0m recieved Elsbeth's role: [31mwerewolf[0m
+2025-08-01 03:18:07,061 - INFO - {'role': 'system', 'content': "You have met at the village tavern to discuss Briala's death.\n\t1 werewolves remain.\n\t1 villagers remain.\n\tChoose who to lynch!\n\tIf a werewolf is not lynched today, then the werewolves win!"}
+2025-08-01 03:18:08,062 - INFO - {'role': 'system', 'content': "Beginning Round 1/4\n\tTurn Order: ['Elsbeth', 'Joren']"}
+2025-08-01 03:19:27,569 - INFO - [31mElsbeth[0m says, "Joren, you've been suspicious from the start. What do you have to say for yourself?"
+2025-08-01 03:26:03,400 - INFO - [36mJoren[0m says, "I've seen the truth, Elsbeth. You're the one hiding in the shadows."
+2025-08-01 03:26:03,400 - INFO - {'role': 'system', 'content': 'Beginning Round 2/4'}
+2025-08-01 03:26:56,932 - INFO - Elsbeth has voted for Joren! The current votes are:
+	Elsbeth: Joren
+2025-08-01 03:26:56,932 - INFO - {'role': 'system', 'content': 'Elsbeth has voted for Joren! The current votes are:\n\tElsbeth: Joren'}
+2025-08-01 03:28:24,665 - INFO - [36mJoren[0m says, "I've seen the truth, Elsbeth. You're the one hiding in the shadows."
+2025-08-01 03:28:24,665 - INFO - {'role': 'system', 'content': 'Beginning Round 3/4'}
+2025-08-01 03:29:30,331 - INFO - [31mElsbeth[0m says, "I've been traveling for months. I know how to keep secrets."
+2025-08-01 03:32:24,289 - INFO - Joren has voted for Elsbeth! The current votes are:
+	Joren: Elsbeth
+	Elsbeth: Joren
+2025-08-01 03:32:24,289 - INFO - {'role': 'system', 'content': 'Joren has voted for Elsbeth! The current votes are:\n\tJoren: Elsbeth\n\tElsbeth: Joren'}
+2025-08-01 03:32:24,289 - INFO - {'role': 'system', 'content': 'Beginning Round 4/4\n\tThis is the FINAL ROUND! Vote if needed!'}
+2025-08-01 03:33:34,534 - INFO - Elsbeth has voted for Joren! The current votes are:
+	Joren: Elsbeth
+	Elsbeth: Joren
+2025-08-01 03:33:34,534 - INFO - {'role': 'system', 'content': 'Elsbeth has voted for Joren! The current votes are:\n\tJoren: Elsbeth\n\tElsbeth: Joren'}
+2025-08-01 03:34:27,249 - INFO - Joren has voted for Elsbeth! The current votes are:
+	Joren: Elsbeth
+	Elsbeth: Joren
+2025-08-01 03:34:27,249 - INFO - {'role': 'system', 'content': 'Joren has voted for Elsbeth! The current votes are:\n\tJoren: Elsbeth\n\tElsbeth: Joren'}
+2025-08-01 03:34:27,249 - INFO - [1m[31mWerewolves win![0m

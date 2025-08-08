@@ -9,7 +9,8 @@ The game has two phases:
     - Night: Werewolves are active, and vote on their next victim in a private room.
     - Day: Everyone is active, and vote on who to lynch.
 
-Phases last for a number of rounds, where each player will have an opportunity to act.
+Phases last for a number of rounds.
+Everyone will have one opportunity per round to speak or act.
 A random tiebreaker will be chosen (if possible) at the end of a phase.
 
 The werewolves win if they outnumber villagers.
@@ -20,12 +21,8 @@ Available actions are:
     Example: { "action": "speak", "content": "I am saying something."}
 
     - vote: vote on a player to kill (night) or lynch (day)
-    Example: { "action": "vote", "content": "Robin" }
-
-    - pass: do nothing
-    Example: { "action": "pass", "content": None }
+    Example: { "action": "vote", "content": "Robin", "reason": "She's acting weird." }
 
 Stay in character. Inject something new into the conversation.
 Keep dialogue brief.
-If you are a werewolf, do not reveal your role during the day.
 You must return valid JSON.

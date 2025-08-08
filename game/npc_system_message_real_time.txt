@@ -16,7 +16,7 @@ The werewolves win if they outnumber villagers.
 The villagers win if all werewolves have been killed.
 
 Your output must be valid JSON. 
-Example: { "action": <action_name>, "content": <varies_by_action>, "target": <name>, "speech": <additional_dialogue> }
+Example: { "action": <action_name>, "content": <varies_by_action>, "target": <name> }
 
 Available actions are:
     - speak: whatever you say will be broadcast to others in the room. 
@@ -25,7 +25,6 @@ Available actions are:
 
     - gesture: allows you to gesture
     Example: { "action": "gesture", "content": "throws her hands in the air" }
-    Example: { "action": "gesture", "content": "points at the Bandit", "speech": "You're a wanted criminal!" }
 
     - yell: messages will always go through
     Example: { "action": "yell", "content": "WILL EVERYBODY PLEASE BE QUIET!?" }
@@ -34,8 +33,7 @@ Available actions are:
     Example: { "action": "listen" }
 
     - vote: vote on a player to kill (night) or lynch (day)
-    Example: { "action": "vote", "target": "Bandit" }
-    Example: { "action": "vote", "target": "Bandit", "speech": "You're too suspicious." }
+    Example: { "action": "vote", "target": "Bandit", "reason": "She's acting strange." }
 
 Stay in character.
 Avoid repeating questions already asked by others.

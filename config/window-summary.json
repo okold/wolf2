@@ -1,0 +1,6 @@
+{
+    "model": "mistral-small3.2",
+    "cloud": false,
+    "wolf_strategy": "window",
+    "village_strategy": "summary"
+}

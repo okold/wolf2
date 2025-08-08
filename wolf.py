@@ -1,38 +1,46 @@
 from multiprocessing.connection import Pipe
-from wolfworld import WolfWorld
+from wolfworld import WolfWorld, WolfLogger
 from wolfnpc import WolfNPC
 import csv
 import sys
 import os
+import json
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'game'))
 from llm import LLM
 
-
 NPCS_PATH = "npcs.csv"
-CLOUD = False
-SLOW = False
-SLOW_MODEL = "mistral-small3.2"
-FAST_MODEL = "dolphin3:8b"
 
 if __name__ == "__main__":
 
-    if "online" in sys.argv or "-o" in sys.argv:
-        CLOUD = True
+    
+    if "-ww" in sys.argv:
+        json_file = open("config/window-window.json")
+        experiment = "ww"
+    elif "-ss" in sys.argv:
+        json_file = open("config/summary-summary.json")
+        experiment = "ss"
+    elif "-sw" in sys.argv:
+        json_file = open("config/summary-window.json")
+        experiment = "sw"
+    elif "-ws" in sys.argv:
+        json_file = open("config/window-summary.json")
+        experiment = "ws"
+    elif "-o" in sys.argv:
+        json_file = open("config/online.json")
+        experiment = "o"
+    else:
+        json_file = open("config/fast.json")
+        experiment = "test"
+    
 
-    if CLOUD:
+    config = json.load(json_file)
+    json_file.close()
+
+    if config["cloud"] == True:
         sys_message_file = "npc_system_message_real_time.txt"
-        turn_based = False
     else:
         sys_message_file = "npc_system_message_turn_based.txt"
-        turn_based = True
-
-    if "slow" in sys.argv or "-s" in sys.argv:
-        SLOW = True
-        model = SLOW_MODEL
-    else:
-        model = FAST_MODEL
-        
 
     player_list = []
 
@@ -40,14 +48,14 @@ if __name__ == "__main__":
         reader = csv.DictReader(file)
         npc_list = [row for _, row in zip(range(WolfWorld.PLAYER_COUNT), reader)]
 
+    csv_logger = WolfLogger(config["model"], experiment)
+
     # create and start server
     parent_conn, child_conn = Pipe()
-    world = WolfWorld(child_conn, turn_based)
+    world = WolfWorld(cli=child_conn, turn_based=(not config["cloud"]), csv_logger=csv_logger, wolf_strategy=config["wolf_strategy"], village_strategy=config["village_strategy"])
     world.start()
 
-
-
-    llm = LLM(model=model, cloud = CLOUD)
+    llm = LLM(model=config["model"], cloud = config["cloud"])
 
     for npc in npc_list:
         #self.log(npc)
@@ -57,7 +65,7 @@ if __name__ == "__main__":
         else:
             npc["can_speak"] = False
 
-        bot_player= WolfNPC(npc["name"], npc["personality"], npc["goal"], npc["description"], npc["can_speak"], npc["gender"], llm, turn_based, sys_message_file)
+        bot_player= WolfNPC(npc["name"], npc["personality"], npc["goal"], npc["description"], npc["can_speak"], npc["gender"], llm, (not config["cloud"]), sys_message_file, None, csv_logger)
         bot_player.start()
         player_list.append(bot_player)
 
