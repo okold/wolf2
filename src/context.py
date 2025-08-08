@@ -44,6 +44,26 @@ class Context(ABC):
         start = max(0, len(self.context) - self.context_keep)
         self.context = self.context[start:]
 
+    def compress_context(self):
+
+        compresed = []
+        current_message = ""
+        for message in self.context:
+            if message["role"] == "user":
+                if current_message != "":
+                    current_message += "\n"
+                current_message += f"{message['content']}"
+            else:
+                if current_message != "":
+                    compresed.append({"role": "user", "content": current_message})
+                    compresed.append(message)
+                current_message = ""
+
+        if current_message != "":
+            compresed.append({"role":"user","content": current_message})
+
+        return compresed
+
     def append(self, message: dict):
         """
         Appends a GPTMessage to the context
@@ -66,52 +86,39 @@ class Context(ABC):
 
 class SummaryContext(Context):
     """
-    Context which summarizes and keeps a certain number of 
-
-    Args:
-        name (str): the name of the Actor
-        personality (str): the personality of the Actor
-        goal (str): the Actor's primary goal
-        llm (LLM): the LLM to use when summmarizing
-        context_limit (int): the point at which the message list gets pruned
-        context_keep (int): the number of messages to keep upon pruning
-        context (list[GPTMessage]): for pre-loading history
-        summary (str): for pre-loading long-term memory
-        logger (Logger): to log
+    Context which summarizes on demand, with no limit
     """
     def __init__(self, 
                  name: str,
                  personality: str,
                  goal: str,
-                 llm = None, 
-                 context_limit=Context.DEFAULT_LIMIT, 
-                 context_keep=Context.DEFAULT_KEEP, 
+                 llm = None,
                  context=[],
                  summary="Your memories are fresh!",
                  logger = None,
-                 csv_logger = None,
-                 summary_message = "Update your long-term memory by summarizing your short-term memory, while keeping your last summary within your long-term memory in mind. Keep your summary in first-person."):
-        super().__init__(llm, context_limit, context_keep, context, logger, csv_logger)
+                 csv_logger = None):
+        super().__init__(llm=llm, context=context, logger=logger, csv_logger=csv_logger)
         self.name = name
         self.personality = personality
         self.goal = goal
-        self.summary_message = summary_message
         self.summary = summary
 
-    def summarize(self):
+    def summarize(self, summary_message):
         """
         Summarizes the context using the LLM.
         """
         if self.context != []:
-            long_term_memory = [{"role": "system", "content": self.summary}]
 
-            prompt = long_term_memory + self.context + [{"role": "system", "content": self.summary_message}]
+            prompt = [{"role": "system", "content": summary_message},
+                      {"role": "user", "content": f"{self.compress_context()}"}]
             
             content, reasoning, tokens_in, tokens_out, eval_in, eval_out = self.llm.prompt(prompt)
             self.summary = content
             if isinstance(self.logger, Logger):
                 self.logger.info(f"Created a summary. Usage: {tokens_in + tokens_out} ({eval_in + eval_out} ms)\n{reasoning}\n{self.summary}")
             self.csv_logger.log(actor=self.name, action="summarize", content=self.summary, tokens_in=tokens_in, tokens_out=tokens_out, eval_in=eval_in, eval_out=eval_out, prompt=prompt, context_length=len(prompt), strategy="summarize")
+
+            self.context = []
 
     def on_limit_reached(self):
         """
@@ -122,7 +129,10 @@ class SummaryContext(Context):
         #self.trim()
 
 class WindowContext(Context):
-    def __init__(self, context_limit=Context.DEFAULT_LIMIT, context = [], logger= None):
+
+    DEFAULT_LIMIT = 30
+
+    def __init__(self, context_limit=DEFAULT_LIMIT, context = [], logger= None):
         super().__init__(context_limit=context_limit, context_keep=context_limit-1, context=context, logger=logger)
 
     def on_limit_reached(self):

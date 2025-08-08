@@ -1,9 +1,18 @@
 # Wolf2
 
-Right now, this program generates surreal space saloon stories in a chatroom-like format. Example output can be seen in the examples/ directory.
+THIS IS UNDER CONSTRUCTION.
+
+This is a game which pits LLMs against each other in the social deduction game Werewolf (or Mafia, or any of its other variants). It tests their roleplay capability and reasoning.
+
+Right now, the game is configured to compare the difference between summarizing context managers and sliding window context managers.
+
+It runs on a local machine with ollama, or through the openai API. 
 
 ## Installation
-In the root folder, you'll need to create a configuration file named **api.json**, which will read your LLM's API key.
+
+TODO: automate this
+
+In the root folder, you'll need to create a configuration file in the config directory named **api.json**, which will read your LLM's API key.
 
 ```
 {
@@ -12,47 +21,37 @@ In the root folder, you'll need to create a configuration file named **api.json*
 }
 ```
 
-### Dependencies
-- openai
+TODO: venv creation?
 
+### Pip Dependencies
+- openai
+- ollama
+
+#### Models:
+By default, the experiments use these models:
+
+- **llama3.1:8b** for speech generation
+- **llama4:16x17b** for summarization
+
+But you can modify the configuration files to use any models you want.
 
 ## Running
 
-**world.py** is the game server. It will automatically write all messages to the logs/ directory.
-
-*Note: might need to make the logs folder manually? Need to check this.*
-
-Run it in the command line with:
-```
-python3 src/world.py
-```
-
-**npc.py** has a script to launch a few LLM-powered agents:
+To run an experiment:
 
 ```
-python3 src/npc.py
+python3 wolf2.py
 ```
 
-**player.py** enables the user to interact with the agents in the world.
-
-*Note: the player cli hasn't been updated entirely with the new messaging system that enabled agent actions, so don't use it in this version.*
+Arguments (from least to most resouce-intensive):
 
 ```
-python3 src/player.py
+-o  > online inference (openai API)
+-ww > wolves window, villagers window
+-sw > wolves summary, villagers window
+-ws > wolves window, villagers summary
+-ss > wolves summary, villagers summary
+
 ```
 
-## TODO
-- Log actor summaries
-- Fix repetition
-- Make memory management more modular, decouple from npc class
-- Saving preset actor profiles and rooms
-- LLM options, turning model into an argument?
-- GUI
-- Documentation
-
-## Debugging
-If ports remain open when testing, until I have everything exit gracefully:
-```
-netstat -tulpn
-kill <pid>
-```
+TODO: queue consecutive runs

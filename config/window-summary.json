@@ -1,5 +1,5 @@
 {
-    "model": "mistral-small3.2",
+    "model": "llama3.1:8b",
     "cloud": false,
     "wolf_strategy": "window",
     "village_strategy": "summary"

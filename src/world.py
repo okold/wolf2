@@ -255,15 +255,17 @@ class World(Process, ABC):
         for actor in self.actors:
             self.send_to_actor(actor, message, type)
 
-    def send_to_room(self, room: str | Room, message: dict, type = "context", verbose = True):
+    def send_to_room(self, room: str | Room, message: dict, type = "context", verbose = True, excludes = []):
         with self.rooms_lock:
             try:
                 if isinstance(room, str):
                     for actor in self.rooms[room].actors:
-                        self.send_to_actor(actor, message, type)
+                        if actor not in excludes:
+                            self.send_to_actor(actor, message, type)
                 elif isinstance(room, Room):
                     for actor in room.actors:
-                        self.send_to_actor(actor, message, type)
+                        if actor not in excludes:
+                            self.send_to_actor(actor, message, type)
                 if verbose:
                     self.log(message)
             except Exception as e:
@@ -288,13 +290,19 @@ class World(Process, ABC):
             arrival_message = f"{actor} has entered the {room}!"
 
             if notify:
-                self.send_to_room(room, {"role": "user", "content": arrival_message}, verbose=verbose)
+                self.send_to_room(room, {"role": "system", "content": arrival_message}, verbose=verbose)
                 self.send_to_room(room, self.rooms[room].state(), "room", verbose=False)
 
     # NOTE: this is NOT THREAD SAFE, and is intended to be called already within a lock
-    def speak(self, actor: str, content: str, colour = None):
+    def speak(self, actor: str, content: str, colour = None, exclude_speaker = True):
         output_plain = f"{actor} says, \"{content}\""
-        self.send_to_room(self.actors[actor]["room"], {"role": "user", "content": output_plain}, verbose=False)
+
+        if exclude_speaker:
+            excludes = [actor]
+        else:
+            excludes = []
+
+        self.send_to_room(self.actors[actor]["room"], {"role": "user", "content": output_plain}, verbose=False, excludes=excludes)
 
         if colour:
             output_fancy = colour + actor + Style.RESET_ALL + f" says, \"{content}\""
@@ -411,15 +419,16 @@ class World(Process, ABC):
             self.voters[actor] = target
 
             if verbose:
-                message = f"{actor} has voted for {target}!\n\tReason: {reason}\n\tThe current votes are:"
+                message = f"{actor} has voted for {target}! Reason: {reason}"
                 
-                for voter in self.voters:
-                    if self.voters[voter] != None:
-                        message += f"\n\t{voter}: {self.voters[voter]}"
+                #message += "\n\tThe current votes are:"
+                #for voter in self.voters:
+                #    if self.voters[voter] != None:
+                #        message += f"\n\t\t{voter}: {self.voters[voter]}"
 
-                self.logger.info(message)
+                #self.logger.info(message)
                 self.send_to_room(self.actors[actor]["room"],
-                            {"role": "system", "content": message})
+                            {"role": "user", "content": message}, excludes=[actor])
 
 
     def resolve_majority_vote(self, tiebreaker = False) -> str | None:

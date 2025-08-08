@@ -1,8 +1,0 @@
-2025-08-01 01:33:27,129 - INFO - Tobias received world message: {'type': 'room', 'content': {'name': 'Village Tavern', 'description': "The village's official meeting place.", 'actors': {'Agnes': {'name': 'Agnes', 'description': 'widowed herbalist with sharp eyes and sharper words', 'status': 'alive'}}}}
-2025-08-01 01:33:27,129 - INFO - Updated room info!
-2025-08-01 01:33:35,136 - INFO - Tobias received world message: {'type': 'sleep'}
-2025-08-01 01:33:35,137 - INFO - Put to sleep!
-2025-08-01 01:33:35,137 - INFO - Tobias received world message: {'type': 'role', 'content': 'villager'}
-2025-08-01 01:33:35,137 - INFO - Received role: villager
-2025-08-01 01:38:54,445 - INFO - Tobias received world message: {'type': 'context', 'content': {'role': 'user', 'content': 'Tobias, a villager, has been killed!'}}
-2025-08-01 01:38:54,445 - INFO - Appended message to context: {'role': 'user', 'content': 'Tobias, a villager, has been killed!'}

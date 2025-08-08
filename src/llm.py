@@ -3,7 +3,7 @@ from ollama import chat
 from openai import OpenAI
 from pydantic import BaseModel
 
-API_PATH = "api.json"
+API_PATH = "config/api.json"
 
 class BasicActionMessage(BaseModel):
     action: str
@@ -88,8 +88,11 @@ class LLM:
                     reasoning = response.message.thinking
                 tokens_in = response.prompt_eval_count
                 tokens_out = response.eval_count
-                eval_in = response.prompt_eval_duration / 1_000_000
-                eval_out = response.eval_duration / 1_000_000
+                eval_in = response.prompt_eval_duration / 1_000_000_000
+                eval_out = response.eval_duration / 1_000_000_000
+
+                #print(message)
+                #print(response)
 
             return content, reasoning, tokens_in, tokens_out, eval_in, eval_out
         except Exception as e:

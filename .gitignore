@@ -1,6 +1,6 @@
 api.json
 .venv/
-logs/
+logs/*
 
 __pycache__/
 *.py[cod]

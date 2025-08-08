@@ -9,7 +9,7 @@ import json
 sys.path.append(os.path.join(os.path.dirname(__file__), 'game'))
 from llm import LLM
 
-NPCS_PATH = "npcs.csv"
+NPCS_PATH = "game/npcs.csv"
 
 if __name__ == "__main__":
 

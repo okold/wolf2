@@ -10,6 +10,10 @@ from datetime import datetime
 from room import Room
 from logging import Logger
 
+SUMMARY_MODEL = "llama4:16x17b"
+#SUMMARY_MODEL = "mistral-small3.2"
+#SUMMARY_MODEL = "llama3.1:70b"
+
 class NPC(Actor, ABC):
 
     WAIT_MIN = 3
@@ -29,6 +33,7 @@ class NPC(Actor, ABC):
 
         self.context = None
         self.set_strategy(strategy)
+        self.last_output = None
         
         self.last_output = None
 
@@ -58,8 +63,15 @@ class NPC(Actor, ABC):
             else:
                 memory = []
                 last_summary = "Your memories are fresh!"
-            summary_llm = LLM(False, "mistral-small3.2")
-            self.context = SummaryContext(self.name, self.personality, self.goal, summary_llm, logger=self.logger, csv_logger=self.csv_logger, context=memory, context_keep=0, summary=last_summary)
+            summary_llm = LLM(False, SUMMARY_MODEL)
+            self.context = SummaryContext(self.name, 
+                                          self.personality, 
+                                          self.goal, 
+                                          summary_llm, 
+                                          logger=self.logger, 
+                                          csv_logger=self.csv_logger, 
+                                          context=memory, 
+                                          summary=last_summary)
         else:
             self.context = WindowContext()
 
@@ -68,13 +80,12 @@ class NPC(Actor, ABC):
         self.system_message = self.system_message
 
     @abstractmethod
-    def update_summary_message(self):
-        pass
+    def generate_summary_message(self) -> str:
+        return ""
 
     def summarize(self):
         if self.strategy == "summary":
-            self.update_summary_message()
-            self.context.summarize()
+            self.context.summarize(self.generate_summary_message())
     
     @abstractmethod
     def gen_system_prompt(self):
@@ -104,23 +115,29 @@ class NPC(Actor, ABC):
         
         output_str = content
 
-        while True:
-            try:
-                output = json.loads(output_str)
+        try:
 
-                self.csv_logger.log(actor=self.name, action="prompt", content=output_str, tokens_in=tokens_in, tokens_out=tokens_out, eval_in=eval_in, eval_out=eval_out, model=self.llm.model, prompt=prompt, context_length=len(prompt), strategy=self.strategy, role=self.role, phase=self.phase)
+            output = json.loads(output_str)
 
-                #if isinstance(output, dict):
-                    #self.context.append({"role": "assistant", "content": output_str})
+            self.csv_logger.log(actor=self.name, action="prompt", content=output_str, tokens_in=tokens_in, tokens_out=tokens_out, eval_in=eval_in, eval_out=eval_out, model=self.llm.model, prompt=prompt, context_length=len(self.context.context), strategy=self.strategy, role=self.role, phase=self.phase)
 
-                if isinstance(self.logger, Logger):
-                    self.logger.info(f"{self.name} sent to world: {output}")
-                self.conn.send(output)
-                break
+            if output_str == self.last_output:
+                self.csv_logger.log(actor=self.name, content="WARNING: suppresesd duplicate message")
+                self.conn.send({"action": "vote", "content": "self"})
+            else:
+                self.last_output = output_str
 
-            except Exception as e:
-                print(e)
+            self.context.append({"role": "assistant", "content": output_str})
 
+            if isinstance(self.logger, Logger):
+                self.logger.info(f"{self.name} sent to world: {output}")
+            self.conn.send(output)
+
+        except Exception as e:
+            self.conn.send({"action": "vote", "target": "self"})
+            
+    def update_role(self, new_role):
+        self.role = new_role
 
     def run(self):
         self.connect()
@@ -141,13 +158,12 @@ class NPC(Actor, ABC):
                         self.context.append(msg["content"])
                         self.new_messages = True
                     elif msg["type"] == "summarize":
-                        if self.strategy == "summary":
-                            self.context.summarize()
+                        self.summarize()
                         self.conn.send({"action": "ready"})
                     elif msg["type"] == "room":
                         self.room_info = msg["content"]
                     elif msg["type"] == "role":
-                        self.role = msg["content"]
+                        self.update_role(msg["content"])
                     elif msg["type"] == "sleep":
                         self.is_awake = False
                     elif msg["type"] == "wake":

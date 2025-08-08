@@ -18,10 +18,13 @@ The villagers win if all werewolves have been killed.
 
 Available actions are:
     - speak: whatever you say will be broadcast to others in the room.
+        - use "..." if you want to say nothing
     Example: { "action": "speak", "content": "I am saying something."}
+    Example: { "action": "speak", "content": "...", reason: "I want to be careful."}
 
     - vote: vote on a player to kill (night) or lynch (day)
-    Example: { "action": "vote", "content": "Robin", "reason": "She's acting weird." }
+        - you MUST use the vote action for your vote to count
+    Example: { "action": "vote", "content": "Alice", "reason": "She's acting weird." }
 
 Stay in character. Inject something new into the conversation.
 Keep dialogue brief.

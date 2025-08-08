@@ -7,7 +7,7 @@ from npc import NPC
 class WolfNPC(NPC):
 
     WOLF_DAY = "Pretend to be an innocent villager. Do not put suspicion on your teammates. If the seer lives, try to deduce their identity and convince the village to lynch them."
-    WOLF_NIGHT = "Plan your daytime strategy. If the seer lives, try to deduce their identity and kill them."
+    WOLF_NIGHT = "Team up with the others in the hideout to plan the village's extermination."
     SEER_STRAT = "If you receive a vision of a werewolf, try to convince the village to lynch them."
     VILLAGE_STRAT = "Deduce who the werewolf(s) are to lynch them. If the seer lives and you trust them, use their vision to help guide the vote. Make note of anyone suspicious."
 
@@ -22,23 +22,10 @@ class WolfNPC(NPC):
         Returns a character sheet, for use in LLM contexts.
         """
 
-        desc = f"""CHARACTER SHEET:
-Your Name: {self.name}
-Your Role: {self.role}
-Your Personality: {self.personality}
-Your Description: {self.description}
-
-You are currently in a room named: {self.room_info['name']}
-{self.room_info['description']}
-        
-"""
-
-        desc += f"""Valid vote targets are:
-{self.vote_targets}
-        
-
-"""
-
+        if self.role == "werewolf":
+            goal = "kill all the villagers"
+        elif self.role in ["seer", "villager"]:
+            goal = "survive, lynch all werewolves"
 
         if self.role == "werewolf" and self.phase == "day":
             strategy = self.WOLF_DAY
@@ -49,40 +36,76 @@ You are currently in a room named: {self.room_info['name']}
         else:
             strategy = self.VILLAGE_STRAT
 
-        desc += f"""General strategy:
-{strategy}
-"""
+        desc = f"""CHARACTER SHEET:
+Name: {self.name}
+Role: {self.role}
+Personality: {self.personality}
+Description: {self.description}
+Goal: {goal}
 
+Current Phase: {self.phase}
+
+You are currently in a room named: {self.room_info['name']}
+{self.room_info['description']}
+
+People in the room are:
+{self.room_info['actors']}
+
+Valid vote targets are:
+{self.vote_targets}
+
+General strategy:
+{strategy}
+
+"""
         return desc
     
     def gen_system_prompt(self):
 
         if self.strategy == "summary":
             prompt = [
-                {"role": "system", "content": self.SYSTEM_MESSAGE + "\nCurrent Summary:\n" + self.context.summary}
+                {"role": "system", "content": self.SYSTEM_MESSAGE + self.character_sheet() + "\nCurrent Summary:\n" + self.context.summary}
             ] + self.context.context
         else:
             prompt = [
-                {"role": "system", "content": self.SYSTEM_MESSAGE}
+                {"role": "system", "content": self.SYSTEM_MESSAGE + self.character_sheet()}
             ] + self.context.context
 
-        prompt.append({"role": "system", "content": self.character_sheet()})
+        #prompt.append({"role": "system", "content": self.character_sheet()})
 
-        prompt.append({"role": "system", "content": f"Remember your identity as {self.name}, the {self.role}. All other players are strangers to you."})
+        prompt.append({"role": "system", "content": f"Stay in character as {self.name}, the {self.role}."})
 
         return prompt
 
-    def update_summary_message(self):
-        new_message = f"""You are playing a game of werewolf, and your role is: {self.role}.
-        Summarize all known knowledge. Be detailed. Keep your summary in first person.
-        Make a list of other players and what roles you suspect they have.
-        Remember what you were doing in previous rounds, if applicable.
-        Write your strategy moving forward.
-        """
+    def update_role(self, new_role):
+        if new_role == "werewolf":
+            self.goal = "wipe out the village"
+        else:
+            self.goal = "survive the werewolf attacks"
+
+        return super().update_role(new_role)
+        
+
+    def generate_summary_message(self):
 
         if self.role == "seer":
-            new_message += "\nAs the seer, remember your visions."
+            role_message = "\nAs the seer, remember your visions."
         if self.role == "werewolf":
-            new_message += "\nAs a werewolf, remember who your teammate is."
-        
-        return super().update_summary_message(new_message)
+            role_message = "\nAs a werewolf, remember who your teammate is."
+        else:
+            role_message = ""
+
+        new_message = f"""You are an actor in a game of werewolf.
+
+{self.character_sheet()}
+
+Summarize the following log in plain English, in first person.
+Update your previous summary.
+Make a list of other players and what roles you suspect or know they have.
+Write your strategy for the next day of the game.
+{role_message}
+
+PREVIOUS SUMMARY:
+{self.context.summary}
+"""
+        return new_message
