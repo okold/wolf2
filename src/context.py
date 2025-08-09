@@ -130,7 +130,7 @@ class SummaryContext(Context):
 
 class WindowContext(Context):
 
-    DEFAULT_LIMIT = 30
+    DEFAULT_LIMIT = 50
 
     def __init__(self, context_limit=DEFAULT_LIMIT, context = [], logger= None):
         super().__init__(context_limit=context_limit, context_keep=context_limit-1, context=context, logger=logger)

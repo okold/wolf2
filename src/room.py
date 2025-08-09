@@ -1,18 +1,6 @@
-from pydantic import BaseModel
 from actor import ActorMessage
+import json
 
-class RoomMessage(BaseModel):
-    """
-    Schema for sending room states between processes.
-
-    Args:
-        name (str): the name of the room
-        description (str): the description of the rooms
-        actors (dict[str, ActorMessage]): actor information broadcast to all
-    """
-    name: str
-    description: str
-    actors: dict[str, ActorMessage]
 
 class Room():
     def __init__(self, name = "Test Room", description = "A dark, empty void"):
@@ -37,3 +25,13 @@ class Room():
 
     def remove_actor(self, name):
         self.actors.pop(name, None)
+
+
+def load_room(path) -> Room | None:
+    try:
+        with open(path) as json_file:
+            f = json.load(json_file)
+
+        return Room(f["name"], f["description"])
+    except:
+        return None

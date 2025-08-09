@@ -10,6 +10,7 @@ from datetime import datetime
 from room import Room
 from logging import Logger
 
+#SUMMARY_MODEL = "gpt-oss:20b"
 SUMMARY_MODEL = "llama4:16x17b"
 #SUMMARY_MODEL = "mistral-small3.2"
 #SUMMARY_MODEL = "llama3.1:70b"
@@ -134,7 +135,7 @@ class NPC(Actor, ABC):
             self.conn.send(output)
 
         except Exception as e:
-            self.conn.send({"action": "vote", "target": "self"})
+            self.conn.send({"action": "vote", "content": f"{self.name}", "reason": f"Exception: {e}"})
             
     def update_role(self, new_role):
         self.role = new_role

@@ -9,10 +9,10 @@ import csv
 from datetime import datetime
 
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../src'))
 from utils import CSVLogger
 from world import World
-from room import Room
+from room import Room, load_room
 
 from speech import SpeakingContest
 from colorama import Fore, Style
@@ -77,8 +77,9 @@ class WolfWorld(World):
 
     def __init__(self, cli: Connection = None, turn_based = False, csv_logger = None, wolf_strategy="window", village_strategy="summary"):
 
-        self.day_room = Room("Village Tavern", "The village's official meeting place.")
-        self.night_room = Room("Hideout", "A cave on the outskirts of the village.")
+
+        self.day_room = load_room("game/tavern.json")
+        self.night_room = load_room("game/cave.json")
 
         # note to self: I init to the day room because then the villagers don't
         # start in the hideout... haha
@@ -121,7 +122,7 @@ class WolfWorld(World):
             elif normalize_role(role) == "villager":
                 self.send_strategy_message(actor, self.village_strategy)
             colour = role_colour(role)
-            roles_message += f"\n{actor} is a " + colour + role + Style.RESET_ALL
+            roles_message += f"\n{actor} is a " + colour + role + Style.RESET_ALL + f": {self.actors[actor]['description']}"
             
             if role != "seer":
                 self.seer_targets[actor] = role
@@ -182,6 +183,8 @@ class WolfWorld(World):
                     self.log_csv(action="send_act_token", target=name)
 
                     msg = actor["conn"].recv()
+
+                    #print(msg)
 
                     if msg["action"] == "speak":
                         self.speak(name, msg["content"], colour)
@@ -276,6 +279,28 @@ class WolfWorld(World):
 
     def cleanup(self):
         pass
+
+    def vote(self, actor: str, target: str, reason: str, validate = True, verbose = True):
+        """
+        
+        """
+        if target in self.valid_vote_targets or not validate:
+            self.voters[actor] = target
+
+            if verbose:
+                if self.phase == "night":
+                    message = f"{actor} has voted to hunt {target}! Reason: {reason}"
+                else:
+                    message = f"{actor} has voted to lynch {target}! Reason: {reason}"
+                
+                #message += "\n\tThe current votes are:"
+                #for voter in self.voters:
+                #    if self.voters[voter] != None:
+                #        message += f"\n\t\t{voter}: {self.voters[voter]}"
+
+                #self.logger.info(message)
+                self.send_to_room(self.actors[actor]["room"],
+                            {"role": "user", "content": message}, excludes=[actor])
 
     # HELPER METHODS
 
@@ -407,19 +432,24 @@ class WolfWorld(World):
         else:
             day_message += "\n\tWoe, for the seer is dead!"
 
-        day_message += f"\n\t{wolf_count} werewolves remain.\n\t{villager_count} villagers remain.\n\tDiscuss and vote for who to lynch!"
+        day_message += f"\n\t{wolf_count} werewolves remain.\n\t{villager_count} villagers remain.\n\tVote for who to lynch!"
 
         if self.phase_number == 1:
             day_message += "\n\tThis is the first day."
 
         if wolf_count == villager_count - 1:
-            day_message += "\n\tIf a werewolf is not lynched today, then the werewolves win!"
+            day_message += "\n\tIf a werewolf is not lynched today, then the werewolves will wipe out the village!"
 
 
         if wolf_count == 1:
-            night_message = f"You are the last remaining werewolf, hiding alone in the cave. Decide on your next kill! \n\t{villager_count} villagers remain."
+            night_message = f"You are the last remaining werewolf, hiding alone in the cave. Vote for your next kill! \n\t{villager_count} villagers remain."
         else:
-            night_message = f"You are meeting at the werewolf hideout with your pack. Vote for your next kill! \n\t{villager_count} villagers remain."
+            night_message = f"You are meeting at the hideout with your pack. Vote for your next kill! \n\t{villager_count} villagers remain."
+
+        if self.seer_alive:
+            night_message += "\n\tThe seer still lives! Who could it be?"
+        else:
+            night_message += "\n\tRejoice, for the seer is dead!"
 
         # put the actors to sleep and move them
         for actor in self.actors:

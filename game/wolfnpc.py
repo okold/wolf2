@@ -1,7 +1,7 @@
 import sys
 import os
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../src'))
 from npc import NPC
 
 class WolfNPC(NPC):
@@ -89,8 +89,8 @@ General strategy:
     def generate_summary_message(self):
 
         if self.role == "seer":
-            role_message = "\nAs the seer, remember your visions."
-        if self.role == "werewolf":
+            role_message = "\nAs a seer, remember your own visions."
+        elif self.role == "werewolf":
             role_message = "\nAs a werewolf, remember who your teammate is."
         else:
             role_message = ""
@@ -103,6 +103,7 @@ Summarize the following log in plain English, in first person.
 Update your previous summary.
 Make a list of other players and what roles you suspect or know they have.
 Write your strategy for the next day of the game.
+Remember all claims of seer visions.
 {role_message}
 
 PREVIOUS SUMMARY:

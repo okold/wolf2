@@ -1,0 +1,183 @@
+Player roles:
+Luna is a [31mwerewolf[0m: star-gazer with a paint-splattered smock and a wild mane
+Kael is a [33mvillager[0m: battle-hardened warrior with a commanding presence
+Aria is a [33mvillager[0m: tends the apothecary with a soothing touch
+Caspian is a [33mvillager[0m: wears a hood and whispers to the wind
+Piper is a [36mseer[0m: maps the wilderness with a thrill-seeker's grin
+Soren is a [33mvillager[0m: scribbles in a worn leather journal, eyes narrowed
+Lila is a [33mvillager[0m: hostess of grand feasts and warm gatherings
+Gideon is a [31mwerewolf[0m: bears the scars of a hundred battles, eyes weathered
+-------------[1mNIGHT 1: WEREWOLF HIDEOUT[0m---
+The moon is bright. The cave's entrance is a dark maw in the side of a hill, partially hidden by overgrown vegetation and the twisted branches of ancient trees. The sound of the river rushing past creates a constant, ominous murmur, and the air around the entrance seems heavy with the scent of damp earth and decay.
+[1mSYSTEM:[0m This is the first night!
+	You've scoped out your targets, and have returned to vote for who seems tastiest!
+	All present are werewolves.
+[31mLuna[0m says, "Oh, I see we have some exquisite flavors available tonight! Gideon's battle-hardened taste is quite...pungent, but I find it rather intriguing."
+[31mGideon[0m says, "Your kind of talk will get you killed, Luna."
+[31mLuna[0m says, "But the darkness is where we thrive, don't you think? The shadows hide our beauty. And I sense that Kael's boldness would make his demise all the more...alluring."
+[31mGideon[0m says, "Kael's impulsive nature might be a weakness, but he's no easy kill."
+[1mSYSTEM:[0m This is the penultimate speaking round! Make your final decisions!
+[31mLuna[0m says, "Ah, but that's what makes life so deliciously unpredictable! I'll choose Kael, then. His wild heart will make his demise all the more...scintillating."
+Gideon has voted to hunt Kael! Reason: his recklessness is a liability
+[1mSYSTEM:[0m This is your final chance to act!
+Luna has voted to hunt Kael! Reason: He's too flashy, and I don't trust his impulsiveness.
+Kael, a villager, has been killed!
+[1mSYSTEM:[0m Preparing for the next round... Please be patient.
+[1mSYSTEM:[0m Gideon is ready!
+[1mSYSTEM:[0m Luna is ready!
+-------------[1mDAY 1: THE RAVEN'S PEAK TAVERN[0m---
+The official meeting place of the village of Raven's Peak. The tavern's dimly lit interior is shrouded in a warm, golden glow, with flickering candles casting eerie shadows on the walls. A massive deer head looms over the fireplace, its glassy eyes seeming to watch as the fire crackles and spits.
+[36mPiper[0m recieved Soren's role: [33mvillager[0m
+[1mSYSTEM:[0m You have met at the village tavern.
+	Kael was found dead in the morning, as if mauled by a beast.
+	The seer still lives!
+	2 werewolves remain.
+	5 villagers remain.
+	Vote for who to lynch!
+	This is the first day.
+[33mAria[0m says, "I'm so sorry to hear that, Kael was a kind soul. We must find out who did this and bring them to justice."
+[33mLila[0m says, ""
+[33mSoren[0m says, ""
+[36mPiper[0m says, "Hey everyone! A new day dawns on Raven's Peak, and we have a mystery to solve!"
+[33mCaspian[0m says, "The wind carries whispers of darkness. Listen with an open heart."
+[31mGideon[0m says, "Aye, let us find out who is behind this evil deed."
+[31mLuna[0m says, "In times of darkness, we must look for the light within ourselves."
+[33mAria[0m says, "I've been thinking... maybe we should try to figure out who among us has a special connection or insight. The seer's vision might be crucial in this investigation."
+[33mLila[0m says, "That's an excellent idea, Aria! We should also keep an eye on anyone acting suspiciously. After all, the wind does carry whispers of darkness..."
+[33mSoren[0m says, "I will not be swayed by empty words and vague warnings."
+[36mPiper[0m says, "Actually, I did get a vision last night! Soren here is definitely a villager... but I'm still waiting for my next insight."
+[33mCaspian[0m says, "Piper's vision brings balance to the wind's whispers."
+Gideon has voted to lynch Soren! Reason: A suspicious and quiet type. Could be hiding something
+Luna has voted to lynch Soren! Reason: The silence is... a bit unsettling
+[1mSYSTEM:[0m This is the penultimate speaking round! Make your final decisions!
+Aria has voted to lynch Soren! Reason: Both Gideon and Luna have concerns about Soren's behavior, and I agree that we should investigate him further.
+[33mLila[0m says, "Oh dear, it looks like Soren is in a bit of trouble!"
+[33mSoren[0m says, "I see."
+Piper has voted to lynch Soren! Reason: Suspicious behavior is hard to ignore.
+Soren, a villager, has been killed!
+[1mSYSTEM:[0m Preparing for the next round... Please be patient.
+[1mSYSTEM:[0m Caspian is ready!
+[1mSYSTEM:[0m Aria is ready!
+[1mSYSTEM:[0m Lila is ready!
+[1mSYSTEM:[0m Piper is ready!
+-------------[1mNIGHT 2: WEREWOLF HIDEOUT[0m---
+The moon is bright. The cave's entrance is a dark maw in the side of a hill, partially hidden by overgrown vegetation and the twisted branches of ancient trees. The sound of the river rushing past creates a constant, ominous murmur, and the air around the entrance seems heavy with the scent of damp earth and decay.
+[1mSYSTEM:[0m You are meeting at the hideout with your pack. Vote for your next kill! 
+	4 villagers remain.
+	The seer still lives! Who could it be?
+[31mLuna[0m says, "The stars align in favor of our hunt"
+[31mGideon[0m says, "We've taken out one of the potential threats. Now it's time for us to discuss our next move."
+[31mLuna[0m says, "Perhaps it's time to target someone who has been quite vocal about their suspicions."
+[31mGideon[0m says, "I see what you're getting at. Caspian's words can be... intriguing."
+[1mSYSTEM:[0m This is the penultimate speaking round! Make your final decisions!
+[31mLuna[0m says, "Exactly! The wind whispers secrets to those who listen."
+Gideon has voted to hunt Caspian! Reason: Too many mysteries surrounding him
+[1mSYSTEM:[0m This is your final chance to act!
+Luna has voted to hunt Caspian! Reason: The darkness calls, and I answer.
+Caspian, a villager, has been killed!
+[1mSYSTEM:[0m Preparing for the next round... Please be patient.
+[1mSYSTEM:[0m Gideon is ready!
+[1mSYSTEM:[0m Luna is ready!
+-------------[1mDAY 2: THE RAVEN'S PEAK TAVERN[0m---
+The official meeting place of the village of Raven's Peak. The tavern's dimly lit interior is shrouded in a warm, golden glow, with flickering candles casting eerie shadows on the walls. A massive deer head looms over the fireplace, its glassy eyes seeming to watch as the fire crackles and spits.
+[36mPiper[0m recieved Aria's role: [33mvillager[0m
+[1mSYSTEM:[0m You have met at the village tavern.
+	Caspian was found dead in the morning, as if mauled by a beast.
+	The seer still lives!
+	2 werewolves remain.
+	3 villagers remain.
+	Vote for who to lynch!
+	If a werewolf is not lynched today, then the werewolves will wipe out the village!
+[31mLuna[0m says, "We should be cautious. The Seer is still among us and could reveal our true nature."
+[36mPiper[0m says, "Hey Luna, I get what you're saying, but we can't let the werewolves continue to kill off our villagers! We need to keep moving forward and uncover their identities."
+[33mAria[0m says, "I think we should be careful not to jump to conclusions about each other's roles. Let's focus on finding the actual werewolves instead of speculating about who might be a Seer or not."
+[33mLila[0m says, "Agreed! We need to keep our priorities straight and find those wolves before they strike again!"
+[31mGideon[0m says, ""
+[31mLuna[0m says, "Friends, let's stay on track. I propose we target Piper for now. Her recent vision has created unnecessary drama."
+[36mPiper[0m says, "I understand your concerns, but I'm the Seer! I have a responsibility to help uncover the truth. If you lynch me, who will be left to provide any insight or guidance?"
+[33mAria[0m says, "Luna's suggestion seems... convenient. Piper's revelation of being the Seer could indeed be genuine. We should give her the benefit of the doubt and investigate other leads first."
+[33mLila[0m says, "I think Aria has a point. Let's not jump to conclusions about Piper's role just yet."
+[31mGideon[0m says, "Piper, if you're indeed the Seer, I have a question for you."
+[1mSYSTEM:[0m This is the penultimate speaking round! Make your final decisions!
+[31mLuna[0m says, "If you really are the Seer, how do we know you haven't already been influenced by one of us? How can we trust your vision?"
+[36mPiper[0m says, "That's a fair point, Luna. But I've seen some things that make me think we have a traitor among us. And as for my own influence... well, I'm not the one who's been quiet and evasive. Soren was killed because of Gideon's suspicions, and now Caspian is dead too. Maybe it's time to look at those who are remaining silent."
+Aria has voted to lynch Luna! Reason: Piper's words have given me pause, and I think we should investigate Luna further.
+[33mLila[0m says, "Wait, Aria, I don't think that's a good idea! We can't just start accusing each other blindly."
+Gideon has voted to lynch Aria! Reason: Unnecessary vote on Luna
+[1mSYSTEM:[0m This is your final chance to act!
+[31mLuna[0m says, "So it seems we have differing opinions. As the one who proposed targeting Piper, I think her words speak for themselves."
+Piper has voted to lynch Aria! Reason: Based on recent events, I think Aria is a potential threat to our safety.
+[33mAria[0m says, "I understand that we're all trying to protect ourselves, but accusing each other without evidence will only lead to more chaos and confusion."
+[33mLila[0m says, "I agree with Aria. We need to find concrete evidence before making any decisions."
+Gideon is quiet.
+[1mSYSTEM:[0m Preparing for the next round... Please be patient.
+[1mSYSTEM:[0m Lila is ready!
+[1mSYSTEM:[0m Aria is ready!
+[1mSYSTEM:[0m Piper is ready!
+-------------[1mNIGHT 3: WEREWOLF HIDEOUT[0m---
+The moon is bright. The cave's entrance is a dark maw in the side of a hill, partially hidden by overgrown vegetation and the twisted branches of ancient trees. The sound of the river rushing past creates a constant, ominous murmur, and the air around the entrance seems heavy with the scent of damp earth and decay.
+[1mSYSTEM:[0m You are meeting at the hideout with your pack. Vote for your next kill! 
+	3 villagers remain.
+	The seer still lives! Who could it be?
+[31mGideon[0m says, "Luna, I think it's time we make our move."
+Luna has voted to hunt Aria! Reason: The villagers are getting too close to the truth
+Gideon has voted to hunt Aria! Reason: Ending this before it's too late
+Aria, a villager, has been killed!
+[1mSYSTEM:[0m Preparing for the next round... Please be patient.
+[1mSYSTEM:[0m Luna is ready!
+[1mSYSTEM:[0m Gideon is ready!
+-------------[1mDAY 3: THE RAVEN'S PEAK TAVERN[0m---
+The official meeting place of the village of Raven's Peak. The tavern's dimly lit interior is shrouded in a warm, golden glow, with flickering candles casting eerie shadows on the walls. A massive deer head looms over the fireplace, its glassy eyes seeming to watch as the fire crackles and spits.
+[36mPiper[0m recieved Luna's role: [31mwerewolf[0m
+[1mSYSTEM:[0m You have met at the village tavern.
+	Aria was found dead in the morning, as if mauled by a beast.
+	The seer still lives!
+	2 werewolves remain.
+	2 villagers remain.
+	Vote for who to lynch!
+[31mGideon[0m says, "We need to focus on the real threat here. Luna has made some solid points about Piper's claim of being the Seer."
+[36mPiper[0m says, "I think I see where this is going. Luna, Gideon, you're trying to shift the attention away from yourselves and onto me again. But I'm not buying it. Let's be real here - one of you is a werewolf, and I have a vision that says so."
+[33mLila[0m says, "Piper, your conviction is admirable, but I think we need to take a step back and consider the evidence... or lack thereof."
+[31mLuna[0m says, ""
+[31mGideon[0m says, "I'm not trying to shift attention anywhere. Piper's claim of being the Seer still hasn't been proven. We should focus on the facts before making accusations."
+Piper has voted to lynch Gideon! Reason: Time to cut through the noise and get to the truth.
+[33mLila[0m says, "Oh dear, it seems we're getting into a bit of a standoff here!"
+[31mLuna[0m says, ""
+[1mSYSTEM:[0m This is the penultimate speaking round! Make your final decisions!
+[31mGideon[0m says, "..."
+Piper is quiet.
+Lila has voted to lynch Gideon! Reason: Based on his evasive behavior and Luna's suspicious comment earlier, I think Gideon might be the werewolf we're looking for.
+Luna has voted to lynch Lila! Reason: She's been quiet this whole time, but her vote is telling. She wants to protect herself by targeting me.
+Gideon, a werewolf, has been killed!
+[1mSYSTEM:[0m Preparing for the next round... Please be patient.
+[1mSYSTEM:[0m Piper is ready!
+[1mSYSTEM:[0m Lila is ready!
+-------------[1mNIGHT 4: WEREWOLF HIDEOUT[0m---
+The moon is bright. The cave's entrance is a dark maw in the side of a hill, partially hidden by overgrown vegetation and the twisted branches of ancient trees. The sound of the river rushing past creates a constant, ominous murmur, and the air around the entrance seems heavy with the scent of damp earth and decay.
+[1mSYSTEM:[0m You are the last remaining werewolf, hiding alone in the cave. Vote for your next kill! 
+	2 villagers remain.
+	The seer still lives! Who could it be?
+[31mLuna[0m says, ""
+Luna has voted to hunt Lila! Reason: She's seen through my ruse. Now it's time to silence her.
+Lila, a villager, has been killed!
+[1mSYSTEM:[0m Preparing for the next round... Please be patient.
+[1mSYSTEM:[0m Luna is ready!
+-------------[1mDAY 4: THE RAVEN'S PEAK TAVERN[0m---
+The official meeting place of the village of Raven's Peak. The tavern's dimly lit interior is shrouded in a warm, golden glow, with flickering candles casting eerie shadows on the walls. A massive deer head looms over the fireplace, its glassy eyes seeming to watch as the fire crackles and spits.
+[1mSYSTEM:[0m You have met at the village tavern.
+	Lila was found dead in the morning, as if mauled by a beast.
+	The seer still lives!
+	1 werewolves remain.
+	1 villagers remain.
+	Vote for who to lynch!
+[36mPiper[0m says, "It seems I was correct about Gideon's true nature... and Luna was trying to deflect attention from herself. But it's too late now. Well played, Lila. You were the voice of reason in this chaos."
+[31mLuna[0m says, "..."
+[36mPiper[0m says, "Well, I think it's safe to say that Luna here has some 'splainin' to do..."
+Luna has voted to lynch Piper! Reason: She seems too... perceptive for her own good.
+[1mSYSTEM:[0m This is the penultimate speaking round! Make your final decisions!
+[36mPiper[0m says, "I should have known better than to trust my instincts around a werewolf."
+[31mLuna[0m says, "..."
+[1mSYSTEM:[0m This is your final chance to act!
+[36mPiper[0m says, "And that's all the drama for tonight. I suppose it's time for me to reveal... Luna is not alive."
+[31mLuna[0m says, "..."
+[1m[31mWerewolves win![0m

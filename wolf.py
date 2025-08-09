@@ -1,12 +1,15 @@
 from multiprocessing.connection import Pipe
-from wolfworld import WolfWorld, WolfLogger
-from wolfnpc import WolfNPC
+
 import csv
 import sys
 import os
 import json
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'game'))
+from wolfworld import WolfWorld, WolfLogger
+from wolfnpc import WolfNPC
+
+sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 from llm import LLM
 
 NPCS_PATH = "game/npcs.csv"
