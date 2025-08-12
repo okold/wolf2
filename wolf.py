@@ -96,7 +96,6 @@ if __name__ == "__main__":
                                  gender=npc["gender"],
                                  game_model=config["game_model"],
                                  summary_model=config["summary_model"],
-                                 logger=txt_logger,
                                  csv_logger=csv_logger,
                                  seed=ts_int,
                                  address=listener.address
