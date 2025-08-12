@@ -1,4 +1,4 @@
-from actor import Actor
+from actor import Actor, DEFAULT_ADDRESS
 from context import SummaryContext, WindowContext
 from llm import LLM, BasicActionMessage, AdvancedActionMessage
 from abc import ABC, abstractmethod
@@ -10,6 +10,8 @@ from datetime import datetime
 from room import Room
 from logging import Logger
 
+GAME_MODEL = "llama3.1:8b"
+
 #SUMMARY_MODEL = "gpt-oss:20b"
 SUMMARY_MODEL = "llama4:16x17b"
 #SUMMARY_MODEL = "mistral-small3.2"
@@ -20,12 +22,28 @@ class NPC(Actor, ABC):
     WAIT_MIN = 3
     WAIT_MAX = 8
 
-    def __init__(self, name, personality, goal, description, can_speak, gender, llm=None, turn_based=False, logger=None, csv_logger=None, strategy="window"):
-        super().__init__(name, personality, goal, description, can_speak=can_speak, gender=gender)
-        if not llm:
-            self.llm = LLM()
-        else:
-            self.llm = llm
+    def __init__(self, 
+                 name, 
+                 personality, 
+                 goal, 
+                 description, 
+                 can_speak, 
+                 gender, 
+                 game_model=GAME_MODEL,
+                 summary_model=SUMMARY_MODEL,
+                 turn_based=False, 
+                 logger=None, 
+                 csv_logger=None, 
+                 strategy="window",
+                 seed=1234,
+                 address=DEFAULT_ADDRESS):
+        super().__init__(name, personality, goal, description, can_speak=can_speak, gender=gender, address=address)
+        
+        self.llm = LLM(False, game_model, seed)
+        self.summary_llm = LLM(False, summary_model, seed)
+        self.seed = seed
+
+        self.vote_state = None
 
         # by default, uses its own LLM for context management, but in theory,
         # could use a different LLM for summarizing than for dialogue generation
@@ -37,6 +55,7 @@ class NPC(Actor, ABC):
         self.last_output = None
         
         self.last_output = None
+        self.teammates = []
 
         self.wait_min = max(0, 10 - self.lck_mod - self.int_mod - 1)
         self.wait_max = min(20, self.wait_min + abs(self.lck_mod) + abs(self.int_mod) + 1)
@@ -49,6 +68,7 @@ class NPC(Actor, ABC):
             self.action_model = AdvancedActionMessage
 
         self.has_turn = False
+        self.vote_targets = []
 
         # REALTIME THINGS
         self.is_awake = False   # start npcs asleep
@@ -63,12 +83,12 @@ class NPC(Actor, ABC):
                 last_summary = self.context.summary
             else:
                 memory = []
-                last_summary = "Your memories are fresh!"
-            summary_llm = LLM(False, SUMMARY_MODEL)
+                last_summary = "Your memories are fresh! You know nothing of this place or these people."
+
             self.context = SummaryContext(self.name, 
                                           self.personality, 
                                           self.goal, 
-                                          summary_llm, 
+                                          self.summary_llm, 
                                           logger=self.logger, 
                                           csv_logger=self.csv_logger, 
                                           context=memory, 
@@ -109,7 +129,7 @@ class NPC(Actor, ABC):
         if isinstance(self.logger, Logger):
             self.logger.info(f"{self.name} sending to LLM. Prompt:\n{prompt}")
 
-        content, reasoning, tokens_in, tokens_out, eval_in, eval_out = self.llm.prompt(prompt, enforce_model=self.action_model)
+        content, reasoning, tokens_in, tokens_out, eval_in, eval_out = self.llm.prompt(prompt, enforce_model=self.action_model, keep_alive=1800)
         
         if isinstance(self.logger, Logger):
             self.logger.info(f"{self.name} received response from {self.llm.model}. Tokens in: {tokens_in} ({eval_in} ms), tokens out: {tokens_out} ({eval_out} ms)\n{reasoning}\n{content}")
@@ -141,6 +161,7 @@ class NPC(Actor, ABC):
         self.role = new_role
 
     def run(self):
+        random.seed(self.seed)
         self.connect()
         
         quiet_round_passed = False
@@ -173,10 +194,14 @@ class NPC(Actor, ABC):
                         self.phase = msg["content"]
                     elif msg["type"] == "vote_targets":
                         self.vote_targets = msg["content"]
+                    elif msg["type"] == "vote_state":
+                        self.vote_state = msg["content"]
                     elif msg["type"] == "act_token":
                         self.has_turn = True
                     elif msg["type"] == "strategy":
                         self.set_strategy(msg["content"])
+                    elif msg["type"] == "team":
+                        self.teammates = msg["content"]
 
                 if not self.turn_based and self.is_awake and (quiet_round_passed or self.new_messages):
                     self.act()

@@ -1,5 +1,6 @@
 {
-    "model": "llama3.1:8b",
+    "game_model": "llama3.1:8b",
+    "summary_model": "llama4:16x17b",
     "cloud": false,
     "wolf_strategy": "window",
     "village_strategy": "window"

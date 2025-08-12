@@ -21,7 +21,7 @@ class LLM:
     """
     An interface for an LLM. Can be local or openai.
     """
-    def __init__(self, cloud = False, model = "dolphin3:8b"):
+    def __init__(self, cloud = False, model = "dolphin3:8b", seed=1234):
 
         self.cloud = cloud
 
@@ -37,10 +37,12 @@ class LLM:
         else:
             self.model = model
 
+        self.seed=seed
+
 
 
     # TODO: not dict, but Response return
-    def prompt(self, message: str | dict | list[dict], enforce_model = None, think = True) -> dict:
+    def prompt(self, message: str | dict | list[dict], enforce_model = None, think = True, keep_alive = 0) -> dict:
         """
         Prompts the LLM.
 
@@ -78,9 +80,18 @@ class LLM:
 
             else:
                 if enforce_model:
-                    response = chat(self.model, messages=message, think=False, format=enforce_model.model_json_schema())
+                    response = chat(self.model, 
+                                    messages=message, 
+                                    think=False, 
+                                    format=enforce_model.model_json_schema(), 
+                                    keep_alive=keep_alive,
+                                    options={"seed": self.seed})
                 else:
-                    response = chat(self.model, messages=message, think=False)
+                    response = chat(self.model, 
+                                    messages=message, 
+                                    think=False, 
+                                    keep_alive=keep_alive,
+                                    options={"seed": self.seed})
 
                 content = response.message.content
 

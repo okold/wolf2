@@ -5,12 +5,11 @@ import os
 import csv
 
 class CSVLogger():
-    def __init__(self, name="log", log_dir="logs", headers=None):
+    def __init__(self, seed="test", name="log", log_dir="logs", headers=None):
         self.lock = Lock()
         os.makedirs(log_dir, exist_ok=True)
 
-        timestamp = datetime.now()
-        self.filepath = os.path.join(log_dir, f"{timestamp.strftime('%Y%m%d%H%M%S')} {name}.csv")
+        self.filepath = os.path.join(log_dir, f"{seed} {name}.csv")
         self.headers = headers
 
         with self.lock:
@@ -25,7 +24,7 @@ class CSVLogger():
                 writer = csv.DictWriter(f, fieldnames=self.headers)
                 writer.writerow(data)
 
-def create_logger(name: str, log_dir: str = "logs", metadata=False) -> logging.Logger:
+def create_logger(name: str, log_dir: str = "logs", metadata=False, seed = 1234) -> logging.Logger:
     """
     Creates a logger.
 
@@ -36,8 +35,7 @@ def create_logger(name: str, log_dir: str = "logs", metadata=False) -> logging.L
     """
 
     os.makedirs(log_dir, exist_ok=True)
-    timestamp = datetime.now()
-    log_filename = os.path.join(log_dir, f"{timestamp.strftime('%Y%m%d%H%M%S')} chat.txt")
+    log_filename = os.path.join(log_dir, f"{seed} chat.txt")
     
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)

@@ -72,7 +72,7 @@ class Context(ABC):
         if isinstance(self.logger, Logger):
             self.logger.info(f"Appended message to context: {message}")
 
-        if len(self.context) >= self.context_limit:
+        if len(self.context) > self.context_limit:
             if isinstance(self.logger, Logger):
                 self.logger.info(f"Reached context window size {len(self.context)}/{self.context_limit}")
             self.on_limit_reached()
@@ -112,7 +112,7 @@ class SummaryContext(Context):
             prompt = [{"role": "system", "content": summary_message},
                       {"role": "user", "content": f"{self.compress_context()}"}]
             
-            content, reasoning, tokens_in, tokens_out, eval_in, eval_out = self.llm.prompt(prompt)
+            content, reasoning, tokens_in, tokens_out, eval_in, eval_out = self.llm.prompt(prompt, keep_alive=1800)
             self.summary = content
             if isinstance(self.logger, Logger):
                 self.logger.info(f"Created a summary. Usage: {tokens_in + tokens_out} ({eval_in + eval_out} ms)\n{reasoning}\n{self.summary}")

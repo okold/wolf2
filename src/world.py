@@ -29,16 +29,21 @@ class World(Process, ABC):
     WAIT_TIME = 1 # wait period between "rounds"
     PRINT_COOLDOWN = 1 # just to make reading it less of a nightmare
 
-    def __init__(self, llm: LLM = None, cli: Connection = None, default_room: Room = None, turn_based = False, csv_logger = None):
+    def __init__(self, llm: LLM = None, cli: Connection = None, default_room: Room = None, turn_based = False, csv_logger = None, txt_logger = None, seed=1234, listener=None):
         super().__init__()
 
         self.llm = llm                      # LLM information
         self.cli = cli                      # connection to the terminal
+        self.seed = seed
 
         self.actors_lock = Lock()           # lock to access actors
         self.actors = {}                    # dictionary of actors
         self.flagged_actors = []            # list of tuples (actor, reason)
-        self.listener = Listener(ADDRESS)   # for new connections
+
+        if listener == None:
+            self.listener = Listener(ADDRESS)   # for new connections
+        else:
+            self.listener = listener
 
         self.print_queue = Queue()
 
@@ -54,7 +59,7 @@ class World(Process, ABC):
         self.rooms_lock = Lock()
         self.rooms = {self.default_room.name: self.default_room}
 
-        self.logger = create_logger("World")
+        self.logger = txt_logger
         self.csv_logger = csv_logger
 
         self.accept_connections = True
@@ -198,6 +203,13 @@ class World(Process, ABC):
         except Exception as e:
             self.logger.error(f"Failed to send act token to actor {actor}: {e}")
 
+    def send_team_message(self, actor: str, team):
+        try:
+            with self.actors_lock:
+                self.actors[actor]["conn"].send({"type": "team", "content": team})
+        except Exception as e:
+            self.logger.error(f"Failed to send act token to actor {actor}: {e}")
+
     def send_strategy_message(self, actor: str, strategy):
         try:
             with self.actors_lock:
@@ -294,22 +306,31 @@ class World(Process, ABC):
                 self.send_to_room(room, self.rooms[room].state(), "room", verbose=False)
 
     # NOTE: this is NOT THREAD SAFE, and is intended to be called already within a lock
-    def speak(self, actor: str, content: str, colour = None, exclude_speaker = True):
-        output_plain = f"{actor} says, \"{content}\""
+    def speak(self, actor: str, content: str, colour = None, exclude_speaker = True, reason = None):
+        if content and content != "...":
+            output_plain = f"{actor} says, \"{content}\""
+            if colour:
+                output_fancy = colour + actor + Style.RESET_ALL + f" says, \"{content}\""
+            else:
+                output_fancy = output_plain
+        else:
+            output_plain = f"{actor} is quiet."
+            if colour:
+                output_fancy = colour + actor + Style.RESET_ALL + f" is quiet."
+            else:
+                output_fancy = output_plain
+
+        if reason:
+            output_fancy += f" Reason: {reason}"
 
         if exclude_speaker:
             excludes = [actor]
         else:
             excludes = []
 
+        self.log(output_fancy)
         self.send_to_room(self.actors[actor]["room"], {"role": "user", "content": output_plain}, verbose=False, excludes=excludes)
 
-        if colour:
-            output_fancy = colour + actor + Style.RESET_ALL + f" says, \"{content}\""
-        else:
-            output_fancy = output_plain
-        
-        self.log(output_fancy)
 
     # NOTE: this is NOT THREAD SAFE, and is intended to be called already within a lock
     def yell(self, actor: str, content: str, colour = None):
@@ -412,9 +433,6 @@ class World(Process, ABC):
 
 
     def vote(self, actor: str, target: str, reason: str, validate = True, verbose = True):
-        """
-        
-        """
         if target in self.valid_vote_targets or not validate:
             self.voters[actor] = target
 
@@ -426,9 +444,8 @@ class World(Process, ABC):
                 #    if self.voters[voter] != None:
                 #        message += f"\n\t\t{voter}: {self.voters[voter]}"
 
-                #self.logger.info(message)
-                self.send_to_room(self.actors[actor]["room"],
-                            {"role": "user", "content": message}, excludes=[actor])
+                self.log(message)
+                self.send_to_room(self.actors[actor]["room"], message={"content": self.voters}, type="vote_state", verbose=False)
 
 
     def resolve_majority_vote(self, tiebreaker = False) -> str | None:
@@ -489,6 +506,7 @@ class World(Process, ABC):
         pass
     
     def run(self):
+        random.seed(self.seed)
         self.connection_loop.start()
         self.print_loop.start()
 

@@ -3,6 +3,7 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../src'))
 from npc import NPC
+from actor import DEFAULT_ADDRESS
 
 class WolfNPC(NPC):
 
@@ -11,8 +12,20 @@ class WolfNPC(NPC):
     SEER_STRAT = "If you receive a vision of a werewolf, try to convince the village to lynch them."
     VILLAGE_STRAT = "Deduce who the werewolf(s) are to lynch them. If the seer lives and you trust them, use their vision to help guide the vote. Make note of anyone suspicious."
 
-    def __init__(self, name, personality, goal, description, can_speak, gender, llm=None, turn_based = True, sys_message_file = "npc_system_message_turn_based.txt", logger=None, csv_logger = None, strategy="summary"):
-        super().__init__(name, personality, goal, description, can_speak, gender, llm, turn_based, logger, csv_logger, strategy)
+    def __init__(self, 
+                 name, 
+                 personality, 
+                 description, 
+                 gender, 
+                 game_model="llama3:8b", 
+                 summary_model="llama4:16x17b", 
+                 sys_message_file = "npc_system_message_turn_based.txt", 
+                 logger=None, 
+                 csv_logger = None, 
+                 strategy="summary",
+                 seed=1234,
+                 address=DEFAULT_ADDRESS):
+        super().__init__(name, personality, "no goal", description, True, gender, game_model, summary_model, True, logger, csv_logger, strategy, seed, address=address)
 
         with open(f'game/{sys_message_file}', 'r', encoding='utf-8') as file:
             self.SYSTEM_MESSAGE = file.read()
@@ -24,8 +37,10 @@ class WolfNPC(NPC):
 
         if self.role == "werewolf":
             goal = "kill all the villagers"
+            other_wolves = f"Your Team:\n{self.teammates}"
         elif self.role in ["seer", "villager"]:
             goal = "survive, lynch all werewolves"
+            other_wolves = ""
 
         if self.role == "werewolf" and self.phase == "day":
             strategy = self.WOLF_DAY
@@ -54,9 +69,13 @@ People in the room are:
 Valid vote targets are:
 {self.vote_targets}
 
+The current vote state is:
+{self.vote_state}
+
 General strategy:
 {strategy}
 
+{other_wolves}
 """
         return desc
     

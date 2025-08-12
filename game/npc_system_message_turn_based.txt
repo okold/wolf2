@@ -18,7 +18,6 @@ The villagers win if all werewolves have been killed.
 
 Available actions are:
     - speak: whatever you say will be broadcast to others in the room.
-        - use "..." if you want to say nothing
     Example: { "action": "speak", "content": "I am saying something."}
     Example: { "action": "speak", "content": "...", reason: "I want to be careful."}
 

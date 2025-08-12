@@ -4,7 +4,7 @@ import time
 from pydantic import BaseModel
 from typing import Optional
 
-ADDRESS = ("localhost", 6000)
+DEFAULT_ADDRESS = ("localhost", 6000)
 
 # TODO: update this...
 class ActorMessage(BaseModel):
@@ -44,7 +44,7 @@ class Actor(Process):
         luck (Optional[int]): affects various things
         can_speak (Optional[int]): default True
     """
-    def __init__(self, name, personality, goal, description = "The most generic person imaginable.", status = "alive", strength = 10, intelligence = 10, charisma = 10, luck = 10, can_speak = True, gender= "indeterminate"):
+    def __init__(self, name, personality, goal, description = "The most generic person imaginable.", status = "alive", strength = 10, intelligence = 10, charisma = 10, luck = 10, can_speak = True, gender= "indeterminate", address=DEFAULT_ADDRESS):
         super().__init__()
 
         self.name = name
@@ -68,6 +68,7 @@ class Actor(Process):
 
         self.conn = None
         self.room_info = {}
+        self.address = address
 
     def dict_server(self) -> ActorMessage:
         """
@@ -138,7 +139,7 @@ class Actor(Process):
 
         while self.conn == None and attempt_counter > 0:
             try:    
-                self.conn = Client(ADDRESS)
+                self.conn = Client(self.address)
             except ConnectionRefusedError:
                 time.sleep(1)
                 attempt_counter -= 1    
