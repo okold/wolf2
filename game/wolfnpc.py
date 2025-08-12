@@ -37,7 +37,7 @@ class WolfNPC(NPC):
 
         if self.role == "werewolf":
             goal = "kill all the villagers"
-            other_wolves = f"Your Team:\n{self.teammates}"
+            other_wolves = f"Werewolves:\n{self.teammates}"
         elif self.role in ["seer", "villager"]:
             goal = "survive, lynch all werewolves"
             other_wolves = ""
