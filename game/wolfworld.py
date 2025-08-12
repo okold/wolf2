@@ -306,6 +306,10 @@ class WolfWorld(World):
     def phase_change(self, vote_result) -> bool:
         if vote_result:
             self.remove(vote_result, "killed")
+            if vote_result in self.werewolves:
+                self.werewolves.remove(vote_result)
+                for werewolf in self.werewolves:
+                    self.send_team_message(werewolf, self.werewolves)
             if vote_result in self.seer_targets: 
                 del self.seer_targets[vote_result]
             kill_message = {"role": "user", "content": f"{vote_result}, a {self.actors[vote_result]['role']}, has been killed!"}
