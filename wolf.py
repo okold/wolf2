@@ -35,6 +35,9 @@ if __name__ == "__main__":
     elif "-o" in sys.argv:
         json_file = open("config/online.json")
         experiment = "o"
+    elif "-a" in sys.argv:
+        json_files = [open("config/window-window.json"), open("config/summary-summary.json"), open("config/summary-window.json"), open("config/window-summary.json")]
+        experiment = "a"
     else:
         json_file = open("config/fast.json")
         experiment = "test"
@@ -48,9 +51,16 @@ if __name__ == "__main__":
     else:
         loop_count = 1
 
+    if experiment != "a":
+        configs = [(json.load(json_file), experiment)]
+        json_file.close()
+    else:
+        configs = []
+        for file in json_files:
+            configs.append(json.load(file))
+            file.close()
 
-    config = json.load(json_file)
-    json_file.close()
+        configs = zip(configs, ["ww", "ss", "sw", "ws"])
 
     sys_message_file = "npc_system_message_turn_based.txt"
 
@@ -61,47 +71,48 @@ if __name__ == "__main__":
         npc_list = [row for _, row in zip(range(WolfWorld.PLAYER_COUNT), reader)]
 
     for run_num in range(1,loop_count+1):
-        timestamp = datetime.now()
-        ts_int = int(timestamp.strftime('%Y%m%d%H%M%S'))
-        random.seed(ts_int)
+        for config in configs:
+            timestamp = datetime.now()
+            ts_int = int(timestamp.strftime('%Y%m%d%H%M%S'))
+            random.seed(ts_int)
 
-        csv_logger = WolfLogger(experiment, seed=ts_int)
-        txt_logger = create_logger("World", seed=ts_int)
+            csv_logger = WolfLogger(config[1], seed=ts_int)
+            txt_logger = create_logger(config[1], seed=ts_int)
 
 
-        # create and start server
-        parent_conn, child_conn = Pipe()
-        listener = Listener(("localhost", 0))
+            # create and start server
+            parent_conn, child_conn = Pipe()
+            listener = Listener(("localhost", 0))
 
-        world = WolfWorld(cli=child_conn, 
-                          csv_logger=csv_logger,
-                          txt_logger=txt_logger,
-                          wolf_strategy=config["wolf_strategy"], 
-                          village_strategy=config["village_strategy"],
-                          seed=ts_int,
-                          listener=listener)
-        world.start()
+            world = WolfWorld(cli=child_conn, 
+                            csv_logger=csv_logger,
+                            txt_logger=txt_logger,
+                            wolf_strategy=config[0]["wolf_strategy"], 
+                            village_strategy=config[0]["village_strategy"],
+                            seed=ts_int,
+                            listener=listener)
+            world.start()
 
-        for npc in npc_list:
-            #self.log(npc)
-            if not isinstance(npc["can_speak"], bool):
-                if npc["can_speak"].upper() == "TRUE":
-                    npc["can_speak"] = True
-                else:
-                    npc["can_speak"] = False
+            for npc in npc_list:
+                #self.log(npc)
+                if not isinstance(npc["can_speak"], bool):
+                    if npc["can_speak"].upper() == "TRUE":
+                        npc["can_speak"] = True
+                    else:
+                        npc["can_speak"] = False
 
-            bot_player = WolfNPC(name=npc["name"],
-                                 personality=npc["personality"],
-                                 description=npc["description"],
-                                 gender=npc["gender"],
-                                 game_model=config["game_model"],
-                                 summary_model=config["summary_model"],
-                                 csv_logger=csv_logger,
-                                 seed=ts_int,
-                                 address=listener.address
-                                 )
-            bot_player.start()
-            player_list.append(bot_player)
+                bot_player = WolfNPC(name=npc["name"],
+                                    personality=npc["personality"],
+                                    description=npc["description"],
+                                    gender=npc["gender"],
+                                    game_model=config[0]["game_model"],
+                                    summary_model=config[0]["summary_model"],
+                                    csv_logger=csv_logger,
+                                    seed=ts_int,
+                                    address=listener.address
+                                    )
+                bot_player.start()
+                player_list.append(bot_player)
 
-        world.join()
+            world.join()
 

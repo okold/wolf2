@@ -270,7 +270,7 @@ class WolfWorld(World):
         summarizing_actors = []
 
         for actor in self.actors:
-            if normalize_role((self.actors[actor]["role"]) == "villager" and self.phase_number != 1) or normalize_role(self.actors[actor]["role"]) == "werewolf":
+            if (normalize_role(self.actors[actor]["role"]) == "villager" and self.phase_number != 1) or normalize_role(self.actors[actor]["role"]) == "werewolf":
                 self.send_summary_message(actor)
                 summarizing_actors.append(actor)
 

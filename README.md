@@ -43,11 +43,11 @@ python3 wolf2.py
 Arguments (from least to most resouce-intensive):
 
 ```
--o  > online inference (openai API)
 -ww > wolves window, villagers window
 -sw > wolves summary, villagers window
 -ws > wolves window, villagers summary
 -ss > wolves summary, villagers summary
+-a  > all in sequence
 -r  > followed by a number to repeat the test
 
 ```
