@@ -60,7 +60,7 @@ if __name__ == "__main__":
             configs.append(json.load(file))
             file.close()
 
-        configs = zip(configs, ["ww", "ss", "sw", "ws"])
+        configs = list(zip(configs, ["ww", "ss", "sw", "ws"]))
 
     sys_message_file = "npc_system_message_turn_based.txt"
 
@@ -71,7 +71,9 @@ if __name__ == "__main__":
         npc_list = [row for _, row in zip(range(WolfWorld.PLAYER_COUNT), reader)]
 
     for run_num in range(1,loop_count+1):
+        print(f"BEGINNING RUN #{run_num}")
         for config in configs:
+            print(f"CONFIG: {config[1]}")
             timestamp = datetime.now()
             ts_int = int(timestamp.strftime('%Y%m%d%H%M%S'))
             random.seed(ts_int)
